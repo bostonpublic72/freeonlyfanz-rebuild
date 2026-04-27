@@ -1,0 +1,19 @@
+---
+import CreatorCard from "./CreatorCard.astro";
+
+const { id, title, creators = [], kicker = "" } = Astro.props;
+---
+
+{creators.length > 0 && (
+  <section class="section" id={id}>
+    <div class="container">
+      <div class="section-header">
+        <h2>{title}</h2>
+        {kicker && <p class="section-kicker">{kicker}</p>}
+      </div>
+      <div class="creator-grid">
+        {creators.map((creator) => <CreatorCard creator={creator} />)}
+      </div>
+    </div>
+  </section>
+)}

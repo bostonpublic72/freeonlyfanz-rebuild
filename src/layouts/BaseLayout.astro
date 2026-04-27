@@ -1,0 +1,90 @@
+---
+import "../styles/global.css";
+import { GA_ID, SITE_NAME, absoluteUrl } from "../lib/site.mjs";
+
+const {
+  title = "FreeOnlyFanz - Curated Free OnlyFans Creators",
+  description = "Browse curated free and free-trial OnlyFans creators. Updated creator picks, free pages, and new profiles to check out.",
+  canonicalPath = Astro.url.pathname,
+} = Astro.props;
+
+const canonicalUrl = absoluteUrl(canonicalPath);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    {GA_ID && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+        <script is:inline define:vars={{ gaId: GA_ID }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = window.gtag || gtag;
+          gtag("js", new Date());
+          gtag("config", gaId);
+        </script>
+      </>
+    )}
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-header">
+        <nav class="nav" aria-label="Primary navigation">
+          <a class="brand" href="/">
+            <span class="brand-mark">FO</span>
+            <span>FreeOnlyFanz</span>
+          </a>
+          <div class="nav-links">
+            <a href="/category/free/">Free</a>
+            <a href="/category/free-trial/">Free Trial</a>
+            <a href="/category/new/">New</a>
+            <a href="/category/featured/">Featured</a>
+          </div>
+        </nav>
+      </header>
+      <main>
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <div class="container footer-inner">
+          <div>
+            <strong>FreeOnlyFanz</strong>
+            <p>Curated free and free-trial creator picks. Some links may be sponsored.</p>
+          </div>
+          <p>18+ only. FreeOnlyFanz is an independent curated directory and is not affiliated with OnlyFans.</p>
+        </div>
+      </footer>
+    </div>
+    <script is:inline>
+      window.trackCreatorOutbound = function trackCreatorOutbound(params) {
+        if (typeof window.gtag !== "function") return;
+        window.gtag("event", "creator_outbound_click", params || {});
+      };
+
+      document.addEventListener("click", function (event) {
+        var link = event.target.closest("[data-creator-outbound]");
+        if (!link || typeof window.trackCreatorOutbound !== "function") return;
+        window.trackCreatorOutbound({
+          username: link.dataset.username || "",
+          creator_name: link.dataset.creatorName || "",
+          recommendation: link.dataset.recommendation || "",
+          commission_type: link.dataset.commissionType || "",
+          offer_type: link.dataset.offerType || "",
+        });
+      });
+    </script>
+  </body>
+</html>

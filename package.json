@@ -7,6 +7,9 @@
     "doc": "docs"
   },
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
     "import": "npm run import:onlytraffic",
     "import:onlytraffic": "node scripts/import-onlytraffic.js",
     "import:transactions": "node scripts/import-onlytraffic-transactions.js",
@@ -18,6 +21,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "astro": "^6.1.9",
     "dotenv": "^17.4.2",
     "slugify": "^1.6.9"
   }

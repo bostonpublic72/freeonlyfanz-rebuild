@@ -1,0 +1,35 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CreatorCard from "../../components/CreatorCard.astro";
+import { getCategoryDefinitions, loadCreators } from "../../lib/creators.mjs";
+
+export function getStaticPaths() {
+  return getCategoryDefinitions().map((category) => ({
+    params: { slug: category.slug },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+const creators = loadCreators().filter(category.filter).slice(0, 24);
+---
+
+<BaseLayout
+  title={`${category.title} | FreeOnlyFanz`}
+  description={category.description}
+  canonicalPath={`/category/${category.slug}/`}
+>
+  <section class="container category-intro">
+    <p class="eyebrow">FreeOnlyFanz Category</p>
+    <h1>{category.title}</h1>
+    <p>{category.description}</p>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="creator-grid">
+        {creators.map((creator) => <CreatorCard creator={creator} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,3 +1,6 @@
 .env
 node_modules/
 npm-debug.log*
+astro-dev*.log
+.astro/
+dist/

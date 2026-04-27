@@ -1,0 +1,121 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CreatorCard from "../../components/CreatorCard.astro";
+import {
+  getCreatorBadges,
+  getOutboundCtaText,
+  getGalleryImages,
+  getImageUrl,
+  getProfileCompanions,
+  loadCreators,
+} from "../../lib/creators.mjs";
+
+export function getStaticPaths() {
+  return loadCreators().map((creator) => ({
+    params: { slug: creator.slug },
+    props: { creator },
+  }));
+}
+
+const { creator } = Astro.props;
+const imageUrl = getImageUrl(creator);
+const galleryImages = getGalleryImages(creator, 8);
+const badges = getCreatorBadges(creator);
+const companionSection = getProfileCompanions(creator, 6);
+const title = `${creator.displayName} - Free OnlyFans Creator | FreeOnlyFanz`;
+const description = creator.shortBio || `View ${creator.displayName} on FreeOnlyFanz.`;
+const ctaText = getOutboundCtaText();
+
+const stats = [
+  ["Posts", creator.postsCount],
+  ["Photos", creator.photosCount],
+  ["Videos", creator.videosCount],
+  ["Likes", creator.likesCount],
+].filter(([, value]) => Number(value) > 0);
+---
+
+<BaseLayout title={title} description={description} canonicalPath={`/creator/${creator.slug}/`}>
+  <div class="container profile-back">
+    <a href="/">&larr; Back to FreeOnlyFanz</a>
+  </div>
+
+  <article class="container creator-profile">
+    <div class="profile-media">
+      <div class="profile-main-image">
+        {imageUrl ? (
+          <img src={imageUrl} alt={creator.displayName} loading="eager" decoding="async" referrerpolicy="no-referrer" />
+        ) : (
+          <div class="image-placeholder" aria-hidden="true">{creator.displayName.slice(0, 1)}</div>
+        )}
+      </div>
+      {galleryImages.length > 1 && (
+        <div class="gallery-grid">
+          {galleryImages.slice(1, 5).map((image) => (
+            <img src={image} alt={`${creator.displayName} preview`} loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div class="profile-copy">
+      <h1>{creator.displayName}</h1>
+      <p class="username">@{creator.username}</p>
+      {badges.length > 0 && (
+        <div class="profile-badges">
+          {badges.map((badge, index) => <span class={`badge ${index === 0 ? "is-accent" : ""}`}>{badge}</span>)}
+        </div>
+      )}
+      {creator.shortBio && <p class="bio">{creator.shortBio}</p>}
+
+      {stats.length > 0 && (
+        <div class="stat-row" aria-label="Creator stats">
+          {stats.slice(0, 4).map(([label, value]) => (
+            <div class="stat">
+              <strong>{Number(value).toLocaleString("en-US")}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {creator.tags.length > 0 && (
+        <div class="tags" aria-label="Creator tags">
+          {creator.tags.slice(0, 6).map((tag) => <span class="tag">{tag}</span>)}
+        </div>
+      )}
+
+      {creator.trackingUrl && (
+        <div class="creator-cta">
+          <a
+            class="button"
+            href={creator.trackingUrl}
+            target="_blank"
+            rel="nofollow sponsored noopener noreferrer"
+            data-creator-outbound
+            data-username={creator.username}
+            data-creator-name={creator.displayName}
+            data-recommendation={creator.recommendation}
+            data-commission-type={creator.commissionType}
+            data-offer-type={creator.offerType}
+          >
+            {ctaText}
+          </a>
+          <p>Opens creator page in a new tab. Some links may be sponsored.</p>
+        </div>
+      )}
+    </div>
+  </article>
+
+  {companionSection.creators.length > 0 && (
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <h2>{companionSection.title}</h2>
+        </div>
+        <div class="creator-grid compact-grid">
+          {companionSection.creators.map((similar) => <CreatorCard creator={similar} />)}
+        </div>
+      </div>
+    </section>
+  )}
+</BaseLayout>

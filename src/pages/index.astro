@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CreatorSection from "../components/CreatorSection.astro";
+import { absoluteUrl } from "../lib/site.mjs";
+import { getHomepageSections } from "../lib/creators.mjs";
+
+const sections = getHomepageSections();
+const itemListCreators = sections.flatMap((section) => section.creators).slice(0, 20);
+const itemListSchema = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Curated Free OnlyFans Creator Picks",
+  itemListElement: itemListCreators.map((creator, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    url: absoluteUrl(`/creator/${creator.slug}/`),
+    name: creator.displayName,
+  })),
+};
+---
+
+<BaseLayout
+  title="FreeOnlyFanz - Curated Free OnlyFans Creators"
+  description="Browse curated free and free-trial OnlyFans creators. Updated creator picks, free pages, and new profiles to check out."
+  canonicalPath="/"
+>
+  <section class="hero">
+    <div class="container hero-copy">
+      <p class="eyebrow">Curated Free Creator Picks</p>
+      <h1>FreeOnlyFanz</h1>
+      <p>
+        Browse selected free and free-trial creator pages, including new profiles being tested for FreeOnlyFanz placement.
+      </p>
+      <div class="hero-actions">
+        <a class="pill-link" href="#new-free-creators">New Picks</a>
+        <a class="pill-link" href="#featured-free-creators">Featured</a>
+        <a class="pill-link" href="#free-trial-creators">Free Trials</a>
+      </div>
+    </div>
+  </section>
+
+  {sections.map((section) => <CreatorSection {...section} />)}
+
+  <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
+</BaseLayout>

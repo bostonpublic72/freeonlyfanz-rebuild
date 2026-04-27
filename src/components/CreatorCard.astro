@@ -1,0 +1,32 @@
+---
+import { getCardCtaText, getCreatorBadges, getImageUrl } from "../lib/creators.mjs";
+
+const { creator } = Astro.props;
+const imageUrl = getImageUrl(creator);
+const badges = getCreatorBadges(creator);
+const ctaText = getCardCtaText();
+---
+
+<article class="creator-card">
+  <a href={`/creator/${creator.slug}/`} aria-label={`View ${creator.displayName}`}>
+    <div class="creator-media">
+      {imageUrl ? (
+        <img src={imageUrl} alt={creator.displayName} loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+      ) : (
+        <div class="image-placeholder" aria-hidden="true">{creator.displayName.slice(0, 1)}</div>
+      )}
+      {badges.length > 0 && (
+        <div class="badge-row">
+          {badges.map((badge, index) => <span class={`badge ${index === 0 ? "is-accent" : ""}`}>{badge}</span>)}
+        </div>
+      )}
+    </div>
+    <div class="creator-card-body">
+      <div>
+        <h3 class="creator-name">{creator.displayName}</h3>
+        <p class="creator-username">@{creator.username}</p>
+      </div>
+      <span class="button secondary">{ctaText}</span>
+    </div>
+  </a>
+</article>
