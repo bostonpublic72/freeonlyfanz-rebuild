@@ -1,0 +1,24 @@
+{
+  "name": "freeonlyfanz-rebuild",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "import": "npm run import:onlytraffic",
+    "import:onlytraffic": "node scripts/import-onlytraffic.js",
+    "import:transactions": "node scripts/import-onlytraffic-transactions.js",
+    "analyze:offers": "node scripts/analyze-offers.js",
+    "refresh:data": "npm run import:onlytraffic && npm run import:transactions && npm run analyze:offers"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "slugify": "^1.6.9"
+  }
+}
