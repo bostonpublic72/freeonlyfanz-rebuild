@@ -276,6 +276,34 @@ function normalizeOfferType(value) {
   return normalized || "unknown";
 }
 
+function isActiveCampaignDate(dateFinish) {
+  if (!dateFinish) {
+    return true;
+  }
+
+  const finishMs = Date.parse(dateFinish);
+  return !Number.isFinite(finishMs) || finishMs > Date.now();
+}
+
+function isPremiumOnlyAccess({ regularPrice, offerType, isFree, isFreeTrial, hasActiveFreePromo }) {
+  if (
+    isFree ||
+    isFreeTrial ||
+    hasActiveFreePromo ||
+    offerType === "free" ||
+    offerType === "free_trial" ||
+    regularPrice === 0
+  ) {
+    return false;
+  }
+
+  if (regularPrice !== null && regularPrice !== undefined) {
+    return regularPrice > 0;
+  }
+
+  return true;
+}
+
 function getMonetizationBucket(commissionType, offerType) {
   const text = `${commissionType || ""} ${offerType || ""}`.toLowerCase();
 
@@ -502,6 +530,7 @@ function normalizeCreator(campaign) {
   const hasActiveFreePromo = promotions.some((promo) => promo.price === 0 && promo.isFinished === false);
   const isFree = regularPrice === 0 || hasActiveFreePromo;
   const isFreeTrial = offerType === "free_trial";
+  const isPremiumOnly = isPremiumOnlyAccess({ regularPrice, offerType, isFree, isFreeTrial, hasActiveFreePromo });
 
   const visits = toNumber(pick(campaign, ["visits", "visit_count", "visitCount", "clicks", "stats.visits", "stats.clicks"], 0));
   const subscribers = toNumber(
@@ -525,6 +554,8 @@ function normalizeCreator(campaign) {
   const revenuePerVisit = visits > 0 ? commissionIncome / visits : 0;
   const blockedCountries = collectBlockedCountries(campaign, accountData);
   const monetizationBucket = getMonetizationBucket(commissionType, offerType);
+  const dateFinish = pick(campaign, ["dateFinish", "date_finish", "finished_at", "finishedAt", "end_date", "endDate"], null);
+  const isActive = isActiveCampaignDate(dateFinish);
 
   return {
     campaignId,
@@ -560,6 +591,7 @@ function normalizeCreator(campaign) {
     isFree,
     isFreeTrial,
     hasActiveFreePromo,
+    isPremiumOnly,
 
     visits,
     subscribers,
@@ -579,6 +611,8 @@ function normalizeCreator(campaign) {
 
     dateCreate: pick(campaign, ["dateCreate", "date_create", "created_at", "createdAt"], null),
     dateUpdate: pick(campaign, ["dateUpdate", "date_update", "updated_at", "updatedAt"], null),
+    dateFinish,
+    isActive,
 
     source: "onlytraffic",
     trafficSourceNotes: "OnlyTraffic campaign import. Evaluate FreeOnlyFanz SEO, TwerkQueens cold traffic, and warm direct social traffic separately.",
@@ -860,6 +894,7 @@ function buildMetadata(creators, limitUsed, authModeUsed) {
     cplCount: creators.filter((creator) => creator.monetizationBucket === "cpl").length,
     freeCount: creators.filter((creator) => creator.isFree).length,
     freeTrialCount: creators.filter((creator) => creator.isFreeTrial).length,
+    premiumOnlyCount: creators.filter((creator) => creator.isPremiumOnly).length,
   };
 }
 
@@ -893,6 +928,7 @@ async function main() {
   console.log(`CPL count: ${metadata.cplCount}`);
   console.log(`Free count: ${metadata.freeCount}`);
   console.log(`Free trial count: ${metadata.freeTrialCount}`);
+  console.log(`Premium-only count: ${metadata.premiumOnlyCount}`);
   console.log(`Raw data saved to: ${path.relative(ROOT, RAW_CAMPAIGNS_PATH)}`);
   console.log(`Normalized creators saved to: ${path.relative(ROOT, CREATORS_PATH)}`);
 }

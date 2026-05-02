@@ -1,0 +1,56 @@
+---
+import { getCreatorBadges, getImageUrl } from "../lib/creators.mjs";
+
+const { creator, priority = "secondary" } = Astro.props;
+const imageUrl = getImageUrl(creator);
+const badges = getCreatorBadges(creator);
+const blockedTqTagPattern = /\b(anal|ass|boobs?|cock|cum|dick|fetish|nudes?|pussy|sex|tits?|xxx)\b/i;
+const displayTags = (creator.tags || []).filter((tag) => !blockedTqTagPattern.test(String(tag))).slice(0, 2);
+const tagLine = displayTags.length > 0 ? displayTags.join(" | ") : "Free Pick";
+const outboundUrl = creator.tqTrackingUrl || creator.trackingUrl;
+---
+
+<article class="creator-card tq-card">
+  <a
+    href={outboundUrl}
+    target="_blank"
+    rel="nofollow sponsored noopener noreferrer"
+    aria-label={`Open ${creator.displayName}`}
+    data-tq-outbound
+    data-username={creator.username}
+    data-creator-name={creator.displayName}
+    data-recommendation={creator.recommendation}
+    data-commission-type={creator.commissionType}
+    data-offer-type={creator.offerType}
+  >
+    <div class="creator-media">
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={creator.displayName}
+          loading={priority === "primary" ? "eager" : "lazy"}
+          decoding="async"
+          referrerpolicy="no-referrer"
+        />
+      ) : (
+        <div class="image-placeholder" aria-hidden="true">{creator.displayName.slice(0, 1)}</div>
+      )}
+      {badges.length > 0 && (
+        <div class="badge-row">
+          {badges.slice(0, 2).map((badge, index) => (
+            <span class={`badge ${index === 0 ? "is-accent" : ""}`}>{badge}</span>
+          ))}
+        </div>
+      )}
+      <span class="save-mark" aria-hidden="true"></span>
+      <div class="creator-card-overlay">
+        <h3 class="creator-name">{creator.displayName}</h3>
+        <p class="creator-username">@{creator.username}</p>
+        <p class="creator-tags">{tagLine}</p>
+      </div>
+    </div>
+    <div class="creator-card-body">
+      <span class="button secondary">Open Free Page</span>
+    </div>
+  </a>
+</article>

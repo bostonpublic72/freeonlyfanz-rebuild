@@ -4,6 +4,8 @@ import { getCategoryDefinitions, loadCreators } from "../lib/creators.mjs";
 export async function GET() {
   const urls = [
     "/",
+    "/categories/",
+    "/creators/",
     ...getCategoryDefinitions().map((category) => `/category/${category.slug}/`),
     ...loadCreators().map((creator) => `/creator/${creator.slug}/`),
   ];

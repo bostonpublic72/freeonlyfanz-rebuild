@@ -4,15 +4,20 @@
     "hadidavey",
     "pollyreed",
     "chloefdavis",
-    "lipswithsmileonthemm"
+    "lipswithsmileonthemm",
+    "daisymayyxo"
   ],
   "forceHomepageTest": [],
   "forceExclude": [],
+  "trafficWeights": {
+    "daisymayyxo": 100
+  },
   "notes": {
     "natatsgirl": "New offer user wants tested near top.",
     "hadidavey": "New offer user wants tested near top.",
     "pollyreed": "New offer user wants tested near top.",
     "chloefdavis": "New offer user wants tested near top.",
-    "lipswithsmileonthemm": "New offer user wants tested near top."
+    "lipswithsmileonthemm": "New offer user wants tested near top.",
+    "daisymayyxo": "Daisy is a manually selected new profile for homepage testing."
   }
 }

@@ -1,9 +1,38 @@
 import fs from "node:fs";
 import path from "node:path";
+import slugify from "slugify";
 
 const ROOT = process.cwd();
 const REPORT_PATH = path.join(ROOT, "data", "reports", "offer-analysis.json");
 const CREATORS_PATH = path.join(ROOT, "data", "creators.json");
+const MANUAL_CURATION_PATH = path.join(ROOT, "data", "manual-curation.json");
+
+const TQ_UTM_PARAMS = {
+  utm_source: "twerkqueens",
+  utm_medium: "nav",
+  utm_campaign: "freeonlyfanz_tq",
+};
+
+const TQ_RECOMMENDATION_WEIGHTS = {
+  feature_new_inventory: 35,
+  feature_now: 30,
+  feature_revshare: 30,
+  test_revshare_free_trial: 25,
+  test_new_inventory: 22,
+  new_cpl_candidate: 18,
+  test_cpl: 18,
+  keep_revshare_direct: 10,
+};
+
+const TQ_ELIGIBLE_RECOMMENDATIONS = new Set(Object.keys(TQ_RECOMMENDATION_WEIGHTS));
+
+const PUBLIC_FREE_INVENTORY_RECOMMENDATIONS = new Set([
+  "feature_new_inventory",
+  "test_new_inventory",
+  "test_revshare_free_trial",
+  "new_cpl_candidate",
+  "test_cpl",
+]);
 
 const SECTION_LIMITS = {
   feature_new_inventory: 8,
@@ -24,6 +53,10 @@ function readJson(filePath, fallback) {
   }
 }
 
+function readManualCurationRaw() {
+  return readJson(MANUAL_CURATION_PATH, {});
+}
+
 export function normalizeUsername(value) {
   return String(value || "")
     .trim()
@@ -34,6 +67,23 @@ export function normalizeUsername(value) {
     .toLowerCase();
 }
 
+export function makeCreatorSlug(value) {
+  const source =
+    typeof value === "object" && value !== null
+      ? normalizeUsername(value.username || value.onlyfansUrl || "") ||
+        value.slug ||
+        value.name ||
+        value.displayName ||
+        `creator-${value.campaignId || value.publicId || "unknown"}`
+      : value;
+
+  return slugify(String(source || ""), {
+    lower: true,
+    strict: true,
+    trim: true,
+  });
+}
+
 function toNumber(value) {
   if (value === null || value === undefined || value === "") {
     return 0;
@@ -42,10 +92,14 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function cappedBoost(value, divisor, cap) {
+  return Math.min(cap, toNumber(value) / divisor);
+}
+
 function compactText(value, maxLength = 170) {
   const text = String(value || "").replace(/\s+/g, " ").trim();
   if (text.length <= maxLength) {
-    return text;
+    return text.replace(/\s*(?:\.{3,}|…)+\s*$/u, "").trim();
   }
 
   const sentenceMatches = [...text.slice(0, maxLength).matchAll(/[.!?](?=\s|$)/g)];
@@ -54,7 +108,23 @@ function compactText(value, maxLength = 170) {
     return text.slice(0, lastSentence.index + 1).trim();
   }
 
-  return text.slice(0, maxLength).replace(/\s+\S*$/, "").trim();
+  return text
+    .slice(0, maxLength)
+    .replace(/\s+\S*$/, "")
+    .replace(/\s*(?:\.{3,}|…)+\s*$/u, "")
+    .trim();
+}
+
+function cleanBioExcerpt(value, maxLength = 170) {
+  const source = String(value || "");
+  const blockedPublicCopyPattern =
+    /\b(18|19|teen|teens|teenage|teenager|student|senior year|freshman|sophomore|junior year|high school|schoolgirl|schoolboy|barely legal|underage|jailbait|loli|little|baby)\b|lilcutie/i;
+
+  if (blockedPublicCopyPattern.test(source)) {
+    return "";
+  }
+
+  return compactText(source, maxLength);
 }
 
 function uniqueStrings(values) {
@@ -73,9 +143,34 @@ function uniqueStrings(values) {
   return output;
 }
 
+function seededRandom(seed) {
+  let hash = 1779033703 ^ String(seed).length;
+
+  for (let index = 0; index < String(seed).length; index += 1) {
+    hash = Math.imul(hash ^ String(seed).charCodeAt(index), 3432918353);
+    hash = (hash << 13) | (hash >>> 19);
+  }
+
+  return function random() {
+    hash = Math.imul(hash ^ (hash >>> 16), 2246822507);
+    hash = Math.imul(hash ^ (hash >>> 13), 3266489909);
+    hash ^= hash >>> 16;
+    return (hash >>> 0) / 4294967296;
+  };
+}
+
 function cleanTag(value) {
   const raw = String(value || "").trim();
-  if (!raw || raw.length > 28 || /https?:|onlyfans|revc_|cplo_|^\d+$|[^\w\s-]/i.test(raw)) {
+  const normalized = raw.replace(/[_-]+/g, " ");
+  const blockedTagPattern =
+    /\b(teen|teens|teenage|teenager|young|schoolgirl|schoolboy|school|barely|legal|college|student|freshman|sophomore|junior|senior|18|19)\b|\b(?:1[89]|[2-9]\d)\s*(?:yo|y\/o|yr\s*old|yrs\s*old|year\s*old|years\s*old|old)\b/i;
+
+  if (
+    !raw ||
+    raw.length > 28 ||
+    blockedTagPattern.test(normalized) ||
+    /https?:|onlyfans|revc_|cplo_|^\d+$|[^\w\s-]/i.test(raw)
+  ) {
     return "";
   }
 
@@ -99,19 +194,137 @@ function cleanTags(values) {
   return uniqueStrings(values.map(cleanTag).filter(Boolean));
 }
 
+function hasAgeCodedPublicName(creator) {
+  const publicText = `${creator.displayName || creator.name || ""} ${creator.username || ""} ${creator.slug || ""}`
+    .replace(/[_\s.-]+/g, "")
+    .toLowerCase();
+
+  return /teen|schoolgirl|schoolboy|barelylegal|underage|jailbait|loli|little|lilcutie|baby/.test(publicText);
+}
+
+function isKnownValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function isManualUnknownAccessAllowed(creator) {
+  const manual = creator.manualCuration || {};
+
+  return Boolean(
+    manual.allowMissingAccessEvidence ||
+      manual.forceFeatureNewInventory ||
+      manual.forceHomepageTest ||
+      creator.allowMissingAccessEvidence
+  );
+}
+
+function hasFreeAccessEvidence(creator) {
+  const offerType = String(creator.offerType || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const regularPriceKnown = isKnownValue(creator.regularPrice);
+
+  return Boolean(
+    creator.isFree ||
+      creator.isFreeTrial ||
+      creator.hasActiveFreePromo ||
+      offerType === "free" ||
+      offerType === "free_trial" ||
+      (regularPriceKnown && toNumber(creator.regularPrice) === 0)
+  );
+}
+
+export function isPremiumOnlyCreator(creator) {
+  if (hasFreeAccessEvidence(creator)) {
+    return false;
+  }
+
+  const regularPriceKnown = isKnownValue(creator.regularPrice);
+  if (regularPriceKnown) {
+    return toNumber(creator.regularPrice) > 0;
+  }
+
+  return !isManualUnknownAccessAllowed(creator);
+}
+
+function isCreatorActive(creator) {
+  if (creator.isActive === false) {
+    return false;
+  }
+
+  const dateFinish = creator.dateFinish || creator.date_finish || creator.campaignDateFinish;
+  if (!dateFinish) {
+    return true;
+  }
+
+  const finishMs = Date.parse(dateFinish);
+  return !Number.isFinite(finishMs) || finishMs > Date.now();
+}
+
+function isPublicFreeInventoryRecommendation(creator) {
+  return PUBLIC_FREE_INVENTORY_RECOMMENDATIONS.has(creator.recommendation);
+}
+
+export function getPublicEligibilityDetails(creator) {
+  const isPremiumOnly = isPremiumOnlyCreator(creator);
+  const publicAccessEvidence = hasFreeAccessEvidence(creator) || isPublicFreeInventoryRecommendation(creator);
+
+  if (creator.manualCuration?.forceExclude || creator.forceExcluded) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "force_excluded" };
+  }
+  if (creator.duplicateBestCandidate === false) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "duplicate_slug_loser" };
+  }
+  if (!isCreatorActive(creator) || creator.recommendation === "exclude_for_now") {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "inactive_campaign" };
+  }
+  if (!creator.slug) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "inactive_campaign" };
+  }
+  if (!String(creator.displayName || creator.name || "").trim()) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "inactive_campaign" };
+  }
+  if (!hasUsableOutboundUrl(creator)) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "missing_tracking_url" };
+  }
+  if (!getImageUrl(creator)) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "missing_image" };
+  }
+  if (isPremiumOnly || !publicAccessEvidence) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "premium_only_hidden" };
+  }
+  if (hasAgeCodedPublicName(creator)) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "force_excluded" };
+  }
+
+  return { isPremiumOnly, publicEligible: true, hiddenReason: "" };
+}
+
+export function isPublicFreeOnlyFanzCreator(creator) {
+  return getPublicEligibilityDetails(creator).publicEligible;
+}
+
+function withPublicEligibilityFields(creator) {
+  return {
+    ...creator,
+    ...getPublicEligibilityDetails(creator),
+  };
+}
+
 function mergeCreatorRows(reportCreator, rawCreator) {
   const merged = {
     ...(rawCreator || {}),
     ...(reportCreator || {}),
   };
   const username = normalizeUsername(merged.username || merged.onlyfansUrl || merged.slug);
-
-  return {
+  const normalizedCreator = {
     ...merged,
     username,
-    slug: merged.slug || username || `creator-${merged.campaignId || merged.publicId}`,
+  };
+
+  return {
+    ...normalizedCreator,
+    username,
+    slug: makeCreatorSlug(normalizedCreator),
     displayName: String(merged.name || username || "Creator").trim(),
-    shortBio: compactText(merged.bio || "", 190),
+    shortBio: cleanBioExcerpt(merged.bio || "", 190),
     homepagePriority: toNumber(merged.homepagePriority),
     score: toNumber(merged.score),
     tags: cleanTags([...(merged.tags || []), ...(merged.campaignTags || [])]),
@@ -123,13 +336,7 @@ function creatorKey(creator) {
 }
 
 function shouldIncludeCreator(creator) {
-  if (creator.manualCuration?.forceExclude) {
-    return false;
-  }
-  if (creator.manualCuration?.forceFeatureNewInventory || creator.manualCuration?.forceHomepageTest) {
-    return true;
-  }
-  return creator.recommendation !== "exclude_for_now";
+  return isPublicFreeOnlyFanzCreator(creator);
 }
 
 function creatorSort(a, b) {
@@ -155,7 +362,20 @@ function dedupeByUsername(creators) {
     }
   }
 
-  return [...byUsername.values()].sort(creatorSort);
+  const bySlug = new Map();
+
+  for (const creator of byUsername.values()) {
+    if (!creator.slug) {
+      continue;
+    }
+
+    const existing = bySlug.get(creator.slug);
+    if (!existing || creatorSort(creator, existing) < 0) {
+      bySlug.set(creator.slug, creator);
+    }
+  }
+
+  return [...bySlug.values()].sort(creatorSort);
 }
 
 export function getImageUrl(creator) {
@@ -177,8 +397,250 @@ export function getGalleryImages(creator, limit = 6) {
   ]).slice(0, limit);
 }
 
+function getManualTrafficWeights() {
+  const manual = readManualCurationRaw();
+  const rawWeights = manual.trafficWeights && typeof manual.trafficWeights === "object" ? manual.trafficWeights : {};
+  const weights = new Map();
+
+  for (const [rawKey, rawWeight] of Object.entries(rawWeights)) {
+    const normalizedKey = normalizeUsername(rawKey) || makeCreatorSlug(rawKey);
+    const slugKey = makeCreatorSlug(rawKey);
+    const weight = toNumber(rawWeight);
+
+    if (!weight || weight <= 0) {
+      continue;
+    }
+    if (normalizedKey) {
+      weights.set(normalizedKey, weight);
+    }
+    if (slugKey) {
+      weights.set(slugKey, weight);
+    }
+  }
+
+  return weights;
+}
+
+function getManualTrafficWeight(creator, trafficWeights = getManualTrafficWeights()) {
+  return (
+    trafficWeights.get(normalizeUsername(creator.username)) ||
+    trafficWeights.get(makeCreatorSlug(creator.slug)) ||
+    trafficWeights.get(makeCreatorSlug(creator.onlyfansUrl)) ||
+    0
+  );
+}
+
+function hasUsableOutboundUrl(creator) {
+  const value = String(creator.trackingUrl || "").trim();
+
+  if (!value) {
+    return false;
+  }
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch (_error) {
+    return false;
+  }
+}
+
+function isTqRecommendationCandidate(creator) {
+  return TQ_ELIGIBLE_RECOMMENDATIONS.has(creator.recommendation);
+}
+
+function getTqEligibility(creator) {
+  const publicEligibility = getPublicEligibilityDetails(creator);
+  const imagePresent = Boolean(getImageUrl(creator));
+  const trackingUrlPresent = hasUsableOutboundUrl(creator);
+  const freeOrTestCandidate = Boolean(
+    creator.isFree ||
+      creator.isFreeTrial ||
+      creator.hasActiveFreePromo ||
+      isTqRecommendationCandidate(creator)
+  );
+
+  if (!publicEligibility.publicEligible) {
+    return {
+      eligible: false,
+      reason: `excluded: ${publicEligibility.hiddenReason}`,
+      imagePresent,
+      trackingUrlPresent,
+    };
+  }
+  if (creator.manualCuration?.forceExclude) {
+    return { eligible: false, reason: "excluded: manual forceExclude", imagePresent, trackingUrlPresent };
+  }
+  if (!trackingUrlPresent) {
+    return { eligible: false, reason: "excluded: missing trackingUrl", imagePresent, trackingUrlPresent };
+  }
+  if (!imagePresent) {
+    return { eligible: false, reason: "excluded: missing usable image", imagePresent, trackingUrlPresent };
+  }
+  if (!freeOrTestCandidate) {
+    return { eligible: false, reason: "excluded: not a free/trial/test candidate", imagePresent, trackingUrlPresent };
+  }
+
+  return { eligible: true, reason: "eligible", imagePresent, trackingUrlPresent };
+}
+
+export function appendTqTrackingParams(trackingUrl) {
+  const rawUrl = String(trackingUrl || "").trim();
+
+  if (!rawUrl) {
+    return "";
+  }
+
+  try {
+    const url = new URL(rawUrl);
+    for (const [key, value] of Object.entries(TQ_UTM_PARAMS)) {
+      if (!url.searchParams.has(key)) {
+        url.searchParams.append(key, value);
+      }
+    }
+    return url.toString();
+  } catch (_error) {
+    const separator = rawUrl.includes("?") ? "&" : "?";
+    const existingParams = new URLSearchParams(rawUrl.split("?")[1] || "");
+    const params = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(TQ_UTM_PARAMS)) {
+      if (!existingParams.has(key)) {
+        params.append(key, value);
+      }
+    }
+
+    const suffix = params.toString();
+    return suffix ? `${rawUrl}${separator}${suffix}` : rawUrl;
+  }
+}
+
+export function getTqWeightDetails(creator, trafficWeights = getManualTrafficWeights()) {
+  const parts = [];
+  let weight = 1;
+  const add = (points, reason) => {
+    const value = toNumber(points);
+    if (value <= 0) {
+      return;
+    }
+    weight += value;
+    parts.push(`${reason} +${Math.round(value * 100) / 100}`);
+  };
+
+  const manualTrafficWeight = getManualTrafficWeight(creator, trafficWeights);
+  add(manualTrafficWeight, "manual traffic weight");
+
+  if (creator.manualCuration?.forceFeatureNewInventory) {
+    add(40, "forceFeatureNewInventory");
+  }
+
+  add(TQ_RECOMMENDATION_WEIGHTS[creator.recommendation] || 0, creator.recommendation || "recommendation");
+
+  if (creator.isFree) {
+    add(10, "free profile");
+  }
+  if (creator.isFreeTrial) {
+    add(10, "free trial");
+  }
+  if (creator.hasActiveFreePromo) {
+    add(8, "active free promo");
+  }
+
+  const galleryImages = getGalleryImages(creator, 4);
+  if (galleryImages.length > 1) {
+    add(8, "multiple images");
+  }
+
+  add(toNumber(creator.score) / 5, "score");
+  add(toNumber(creator.homepagePriority) / 2, "homepagePriority");
+  add(toNumber(creator.manualPriority) / 2, "manualPriority");
+  add(cappedBoost(creator.transactionIncome, 20, 12), "transactionIncome");
+  add(cappedBoost(creator.subscribers, 25, 12), "subscribers");
+  add(cappedBoost(creator.realRevenuePerSubscriber, 0.5, 10), "realRevenuePerSubscriber");
+
+  return {
+    tqWeight: Math.max(1, Math.round(weight * 100) / 100),
+    reason: parts.join("; ") || "base eligible weight",
+    manualTrafficWeight,
+  };
+}
+
+function weightedShuffle(creators, seed) {
+  const random = seededRandom(seed);
+
+  return creators
+    .map((creator) => {
+      const weight = Math.max(1, toNumber(creator.tqWeight));
+      const roll = Math.max(Number.EPSILON, random());
+      return {
+        creator,
+        rank: -Math.log(roll) / weight,
+      };
+    })
+    .sort((a, b) => a.rank - b.rank)
+    .map((item) => item.creator);
+}
+
+export function getTqRotationSeed() {
+  return process.env.TQ_ROTATION_SEED || new Date().toISOString().slice(0, 13);
+}
+
+export function getTqCreatorRows({ seed = getTqRotationSeed(), mainLimit = 12, moreLimit = 24, poolLimit = 60 } = {}) {
+  const creators = loadCreators();
+  const trafficWeights = getManualTrafficWeights();
+  const rows = creators.map((creator) => {
+    const eligibility = getTqEligibility(creator);
+    const weightDetails = eligibility.eligible
+      ? getTqWeightDetails(creator, trafficWeights)
+      : { tqWeight: 0, reason: eligibility.reason, manualTrafficWeight: 0 };
+
+    return {
+      creator,
+      ...eligibility,
+      ...weightDetails,
+      reason: eligibility.eligible ? weightDetails.reason : eligibility.reason,
+      shownOnTq: false,
+      tqSection: "",
+    };
+  });
+
+  const eligibleRows = rows.filter((row) => row.eligible);
+  const weightedCreators = eligibleRows.map((row) => ({
+    ...row.creator,
+    tqWeight: row.tqWeight,
+    tqWeightReason: row.reason,
+    tqTrackingUrl: appendTqTrackingParams(row.creator.trackingUrl),
+  }));
+  const poolCreators = weightedShuffle(weightedCreators, seed).slice(0, Math.min(poolLimit, weightedCreators.length));
+  const mainCreators = poolCreators.slice(0, Math.min(mainLimit, poolCreators.length));
+  const moreCreators = poolCreators.slice(mainCreators.length, mainCreators.length + moreLimit);
+  const sectionBySlug = new Map([
+    ...mainCreators.map((creator) => [creator.slug, "Start Here"]),
+    ...moreCreators.map((creator) => [creator.slug, "More Free Profiles"]),
+  ]);
+
+  for (const row of rows) {
+    const tqSection = sectionBySlug.get(row.creator.slug) || "";
+    row.shownOnTq = Boolean(tqSection);
+    row.tqSection = tqSection;
+  }
+
+  return {
+    seed,
+    rows,
+    eligibleRows,
+    poolCreators,
+    mainCreators,
+    moreCreators,
+  };
+}
+
 export function getCreatorBadges(creator) {
   const badges = [];
+
+  if (isPremiumOnlyCreator(creator)) {
+    return badges;
+  }
 
   if (
     ["feature_new_inventory", "test_new_inventory", "test_revshare_free_trial"].includes(creator.recommendation)
@@ -202,7 +664,11 @@ export function getCardCtaText() {
   return "View Profile";
 }
 
-export function getOutboundCtaText() {
+export function getOutboundCtaText(creator = null) {
+  if (creator && isPremiumOnlyCreator(creator)) {
+    return "Open Profile";
+  }
+
   return "Open Free Page";
 }
 
@@ -229,7 +695,9 @@ export function loadCreators() {
     return mergeCreatorRows(creator, raw);
   });
 
-  return dedupeByUsername(mergedCreators.filter(shouldIncludeCreator));
+  const annotatedCreators = mergedCreators.map(withPublicEligibilityFields);
+
+  return dedupeByUsername(annotatedCreators.filter((creator) => creator.slug && shouldIncludeCreator(creator)));
 }
 
 export function getHomepageSections() {
@@ -243,39 +711,39 @@ export function getHomepageSections() {
   return [
     {
       id: "new-free-creators",
-      title: "New Free Creators to Check Out",
-      kicker: "Fresh profiles we're currently testing for placement.",
+      title: "New Free Profiles",
+      kicker: "Fresh free profiles added to the list.",
       creators: byRecommendation(["feature_new_inventory"], SECTION_LIMITS.feature_new_inventory),
     },
     {
       id: "featured-free-creators",
-      title: "Featured Free OnlyFans Creators",
-      kicker: "Higher-priority creators from current campaign performance and curation.",
+      title: "Featured Creator Picks",
+      kicker: "Creator pages worth opening first.",
       creators: byRecommendation(["feature_now", "feature_revshare"], SECTION_LIMITS.featured),
     },
     {
       id: "free-trial-creators",
-      title: "Free Trial Creator Picks",
-      kicker: "Creators with free-trial or free-to-follow offers.",
+      title: "Free Trial Picks",
+      kicker: "Free-trial picks with quick access.",
       creators: byRecommendation(["test_revshare_free_trial"], SECTION_LIMITS.free_trial),
     },
     {
       id: "more-free-picks",
-      title: "More Free Creator Picks",
-      kicker: "Additional free profiles worth testing.",
+      title: "More Free Profiles",
+      kicker: "More free creator pages worth browsing.",
       creators: byRecommendation(["test_cpl", "new_cpl_candidate", "test_new_inventory"], SECTION_LIMITS.cpl_tests),
     },
     {
       id: "popular-picks",
-      title: "Popular Creator Picks",
-      kicker: "Legacy and popular profiles kept lower on the page for discovery.",
+      title: "Popular Picks",
+      kicker: "Established picks and longtime favorites.",
       creators: byRecommendation(["keep_revshare_direct", "legacy_watch", "review_manually"], SECTION_LIMITS.popular),
     },
   ].filter((section) => section.creators.length > 0);
 }
 
 export function getCreatorBySlug(slug) {
-  return loadCreators().find((creator) => creator.slug === slug);
+  return loadCreators().find((creator) => creator.slug === makeCreatorSlug(slug));
 }
 
 export function getSimilarCreators(currentCreator, limit = 4) {
@@ -321,27 +789,27 @@ export function getCategoryDefinitions() {
   return [
     {
       slug: "free",
-      title: "Free Creator Picks",
-      description: "Curated creators with free pages, free trials, or active free promotions.",
+      title: "Free Profiles",
+      description: "Free creator pages and free-trial profiles in one place.",
       filter: (creator) => creator.isFree || creator.isFreeTrial || creator.hasActiveFreePromo,
     },
     {
       slug: "free-trial",
-      title: "Free Trial Creators",
-      description: "Creator profiles currently grouped as free-trial tests.",
+      title: "Free Trial Picks",
+      description: "Profiles with free-trial or free-to-follow access.",
       filter: (creator) => creator.recommendation === "test_revshare_free_trial" || creator.isFreeTrial,
     },
     {
       slug: "new",
-      title: "New Creator Tests",
-      description: "New inventory selected for FreeOnlyFanz test placement.",
+      title: "New Creator Picks",
+      description: "Fresh free profiles recently added to the list.",
       filter: (creator) =>
         ["feature_new_inventory", "test_new_inventory", "new_cpl_candidate"].includes(creator.recommendation),
     },
     {
       slug: "featured",
-      title: "Featured Creators",
-      description: "Creators currently carrying the strongest FreeOnlyFanz placement signals.",
+      title: "Featured Creator Picks",
+      description: "Standout creator pages worth opening first.",
       filter: (creator) => ["feature_new_inventory", "feature_now", "feature_revshare"].includes(creator.recommendation),
     },
   ];

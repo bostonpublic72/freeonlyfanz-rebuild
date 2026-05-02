@@ -1,0 +1,83 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import CreatorCard from "../../components/CreatorCard.astro";
+import { loadCreators, normalizeUsername } from "../../lib/creators.mjs";
+
+/** Public list from loadCreators is already de-duped, sorted, and excludes hidden rows. */
+const creators = loadCreators().filter((creator) => {
+  if (!creator.slug) return false;
+  if (!String(creator.displayName || "").trim()) return false;
+  const u = normalizeUsername(creator.username || creator.onlyfansUrl || "");
+  return Boolean(u);
+});
+
+const totalCount = creators.length;
+---
+
+<BaseLayout
+  title="Browse All Creators | FreeOnlyFanz"
+  description="Explore the current FreeOnlyFanz creator list, including free and free-trial profiles."
+  canonicalPath="/creators/"
+>
+  <section class="container category-intro browse-all-intro">
+    <p class="eyebrow">Directory</p>
+    <h1>Browse All Creators</h1>
+    <p class="browse-all-sub">
+      Explore the current FreeOnlyFanz creator list, including free and free-trial profiles.
+    </p>
+    <p id="browse-filter-status" class="browse-all-filter-note" hidden></p>
+  </section>
+
+  <section class="section browse-all-section">
+    <div class="container">
+      <p class="browse-all-meta" aria-live="polite">
+        <span id="browse-count-visible">{totalCount}</span> of {totalCount} creator{totalCount === 1 ? "" : "s"} listed
+      </p>
+      <div class="creator-grid" id="browse-creator-grid">
+        {creators.map((creator) => (
+          <CreatorCard creator={creator} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var q = (params.get("q") || "").trim().toLowerCase();
+        var cards = document.querySelectorAll("#browse-creator-grid .creator-card");
+        var statusEl = document.getElementById("browse-filter-status");
+        var countEl = document.getElementById("browse-count-visible");
+        var total = cards.length;
+        if (!q) {
+          if (statusEl) statusEl.hidden = true;
+          if (countEl) countEl.textContent = String(total);
+          return;
+        }
+        var shown = 0;
+        cards.forEach(function (el) {
+          var name = (el.getAttribute("data-display-name") || "").toLowerCase();
+          var user = (el.getAttribute("data-username") || "").toLowerCase();
+          var match = name.indexOf(q) !== -1 || user.indexOf(q) !== -1;
+          el.style.display = match ? "" : "none";
+          if (match) shown += 1;
+        });
+        if (countEl) countEl.textContent = String(shown);
+        if (statusEl) {
+          statusEl.hidden = false;
+          statusEl.textContent = "";
+          statusEl.appendChild(
+            document.createTextNode(
+              "Showing " + shown + " match" + (shown === 1 ? "" : "es") + " for “" + q + "”. "
+            )
+          );
+          var link = document.createElement("a");
+          link.href = "/creators/";
+          link.textContent = "Show all";
+          statusEl.appendChild(link);
+        }
+      } catch (e) {}
+    })();
+  </script>
+</BaseLayout>

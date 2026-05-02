@@ -14,7 +14,11 @@
     "import:onlytraffic": "node scripts/import-onlytraffic.js",
     "import:transactions": "node scripts/import-onlytraffic-transactions.js",
     "analyze:offers": "node scripts/analyze-offers.js",
-    "refresh:data": "npm run import:onlytraffic && npm run import:transactions && npm run analyze:offers"
+    "validate:links": "node scripts/validate-links.js",
+    "explain:tq": "node scripts/explain-tq.js",
+    "refresh:data": "npm run import:onlytraffic && npm run import:transactions && npm run analyze:offers",
+    "deploy": "npm run build && node scripts/deploy-ftp.js",
+    "deploy:upload": "node scripts/deploy-ftp.js"
   },
   "keywords": [],
   "author": "",
@@ -24,5 +28,8 @@
     "astro": "^6.1.9",
     "dotenv": "^17.4.2",
     "slugify": "^1.6.9"
+  },
+  "devDependencies": {
+    "ftp-deploy": "^2.4.7"
   }
 }

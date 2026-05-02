@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+/* Replace with your real DMCA/designated contact if contact@freeonlyfanz.com is not monitored. */
+const DMCA_EMAIL = "contact@freeonlyfanz.com";
+---
+
+<BaseLayout
+  title="DMCA & Content Removal | FreeOnlyFanz"
+  description="Request removal of material on FreeOnlyFanz. We respond to good-faith copyright and personal-image reports."
+  canonicalPath="/dmca/"
+>
+  <article class="info-page container">
+    <header class="info-page-header">
+      <p class="info-eyebrow">Legal</p>
+      <h1>DMCA / Content Removal</h1>
+    </header>
+    <div class="info-page-body">
+      <p>
+        FreeOnlyFanz hosts short directory text and thumbnails that help you browse. If you believe material on
+        <em>this</em> site infringes your copyright, or that a listing should be corrected for another serious reason, send
+        a detailed notice.
+      </p>
+      <p>Please include:</p>
+      <ul>
+        <li>Your name and a working email we can reply to</li>
+        <li>Exact URL(s) on FreeOnlyFanz where the material appears</li>
+        <li>What you own or why the listing should change</li>
+        <li>A good-faith statement that your request is accurate (for copyright claims, that you are authorized to act)</li>
+      </ul>
+      <p>
+        Email: <a href={`mailto:${DMCA_EMAIL}?subject=DMCA%20request`}>{DMCA_EMAIL}</a>
+      </p>
+      <p>
+        We are not the host of full creator content; most media lives on third-party pages. For content on those platforms,
+        you may need to contact them directly.
+      </p>
+      <p class="note">
+        We process requests when we can. Abuse, incomplete notices, or threats slow things down. 18+ directory—adult
+        listings may remain in categories that comply with our rules.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

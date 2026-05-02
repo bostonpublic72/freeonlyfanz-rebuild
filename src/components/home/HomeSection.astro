@@ -1,0 +1,24 @@
+---
+import CreatorCard from "../CreatorCard.astro";
+
+const { id, anchorId, title, creators = [], kicker = "", viewHref = "", variant = "" } = Astro.props;
+const sectionDomId = anchorId || id;
+const sectionClass = ["section", "home-section", variant ? `is-${variant}` : ""].filter(Boolean).join(" ");
+---
+
+{creators.length > 0 && (
+  <section class={sectionClass} id={sectionDomId}>
+    <div class="container">
+      <div class="section-header">
+        <div class="section-copy">
+          <h2>{title}</h2>
+          {kicker && <p class="section-kicker">{kicker}</p>}
+        </div>
+        {viewHref && <a class="section-link" href={viewHref}>View all</a>}
+      </div>
+      <div class="creator-grid">
+        {creators.map((creator) => <CreatorCard creator={creator} />)}
+      </div>
+    </div>
+  </section>
+)}

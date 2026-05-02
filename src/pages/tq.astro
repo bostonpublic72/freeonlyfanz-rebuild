@@ -1,0 +1,169 @@
+---
+import TqCreatorCard from "../components/TqCreatorCard.astro";
+import "../styles/global.css";
+import { GA_ID, SITE_NAME, absoluteUrl } from "../lib/site.mjs";
+import { getTqCreatorRows } from "../lib/creators.mjs";
+
+const { eligibleRows, mainCreators, moreCreators } = getTqCreatorRows({
+  mainLimit: 12,
+  moreLimit: 24,
+  poolLimit: 60,
+});
+const title = "Pick a Free Profile | FreeOnlyFanz";
+const description = "Free and free-trial creator pages worth opening first.";
+const canonicalUrl = absoluteUrl("/tq/");
+const heartPath =
+  "M24 41S6 30.8 6 16.8C6 10 10.8 6 16.3 6c3.3 0 6.1 1.5 7.7 4.1C25.6 7.5 28.4 6 31.7 6 37.2 6 42 10 42 16.8 42 30.8 24 41 24 41Z";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="robots" content="noindex, follow" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    {GA_ID && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+        <script is:inline define:vars={{ gaId: GA_ID }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = window.gtag || gtag;
+          gtag("js", new Date());
+          gtag("config", gaId);
+        </script>
+      </>
+    )}
+  </head>
+  <body class="tq-page-body">
+    <div class="site-shell tq-shell">
+      <header class="tq-header">
+        <nav class="container tq-nav" aria-label="TwerkQueens landing navigation">
+          <a class="brand" href="/">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 48 48" role="img">
+                <path
+                  d={heartPath}
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span class="brand-name">FreeOnly<span>Fanz</span></span>
+          </a>
+          <a class="nav-cta tq-nav-cta" href="/category/free/">Browse All Picks</a>
+        </nav>
+      </header>
+
+      <main>
+        <section class="tq-hero" aria-labelledby="tq-hero-title">
+          <div class="container tq-hero-inner">
+            <p class="tq-eyebrow">Fast picks from FreeOnlyFanz</p>
+            <h1 id="tq-hero-title">Pick a Free Profile</h1>
+            <p>Free and free-trial creator pages worth opening first.</p>
+            <div class="tq-chip-row" aria-label="Landing page filters">
+              <span>Free</span>
+              <span>Free Trial</span>
+              <span>New</span>
+              <span>Popular</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="tq-trust-strip" aria-label="Disclosure">
+          <div class="container tq-trust-grid">
+            <span>18+ only</span>
+            <span>Free and free-trial pages</span>
+            <span>Some links may be sponsored</span>
+          </div>
+        </section>
+
+        <section class="section tq-section" id="start-here">
+          <div class="container">
+            <div class="section-header">
+              <div class="section-copy">
+                <h2>Start Here</h2>
+                <p class="section-kicker">Top free picks for quick browsing.</p>
+              </div>
+            </div>
+            <div class="creator-grid tq-grid">
+              {mainCreators.map((creator, index) => (
+                <TqCreatorCard creator={creator} priority={index < 4 ? "primary" : "secondary"} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {moreCreators.length > 0 && (
+          <section class="section tq-section" id="more-free-profiles">
+            <div class="container">
+              <div class="section-header">
+                <div class="section-copy">
+                  <h2>More Free Profiles</h2>
+                  <p class="section-kicker">More creator pages to open next.</p>
+                </div>
+              </div>
+              <div class="creator-grid tq-grid tq-more-grid">
+                {moreCreators.map((creator) => <TqCreatorCard creator={creator} />)}
+              </div>
+            </div>
+          </section>
+        )}
+      </main>
+
+      <footer class="tq-footer">
+        <div class="container tq-footer-inner">
+          <a class="brand footer-brand" href="/">
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 48 48" role="img">
+                <path
+                  d={heartPath}
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span class="brand-name">FreeOnly<span>Fanz</span></span>
+          </a>
+          <p>18+ only. Some links may be sponsored.</p>
+          <p>FreeOnlyFanz is an independent curated directory and is not affiliated with OnlyFans.</p>
+        </div>
+      </footer>
+    </div>
+
+    <script is:inline>
+      window.trackTqOutbound = function trackTqOutbound(params) {
+        if (typeof window.gtag !== "function") return;
+        window.gtag("event", "tq_outbound_click", params || {});
+      };
+
+      document.addEventListener("click", function (event) {
+        var link = event.target.closest("[data-tq-outbound]");
+        if (!link || typeof window.trackTqOutbound !== "function") return;
+        window.trackTqOutbound({
+          username: link.dataset.username || "",
+          creator_name: link.dataset.creatorName || "",
+          recommendation: link.dataset.recommendation || "",
+          commission_type: link.dataset.commissionType || "",
+          offer_type: link.dataset.offerType || "",
+          source: "tq",
+        });
+      });
+    </script>
+  </body>
+</html>

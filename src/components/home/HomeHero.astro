@@ -1,0 +1,188 @@
+---
+import { getCreatorBadges, getImageUrl } from "../../lib/creators.mjs";
+
+const { creators = [] } = Astro.props;
+const positionForIndex = (index, total) => {
+  if (index === 0) return "is-center";
+  if (index === 1) return "is-right";
+  if (index === total - 1) return "is-left";
+  return "is-hidden";
+};
+const stageCreators = creators.filter(Boolean).map((creator, index, list) => ({
+  creator,
+  imageUrl: getImageUrl(creator),
+  position: positionForIndex(index, list.length),
+  kicker: getCreatorBadges(creator)[0] || "Free",
+}));
+
+const filters = [
+  { label: "New Picks", href: "#new" },
+  { label: "Free Trials", href: "#free-trials" },
+  { label: "Featured", href: "#featured" },
+  { label: "Popular", href: "#popular" },
+];
+const trustItems = [
+  {
+    title: "Curated shelves",
+    body: "Hand-picked rows so you can skim fast.",
+  },
+  {
+    title: "Independent directory",
+    body: "We browse-layer the web—we are not a platform.",
+  },
+  {
+    title: "Straight outbound links",
+    body: "You always know when you are leaving this site.",
+  },
+];
+---
+
+<section class="home-hero" aria-labelledby="home-hero-title">
+  <div class="container home-hero-grid">
+    <div class="home-hero-copy">
+      <h1 id="home-hero-title">
+        <span>Curated Free</span>
+        <span>Creator Picks</span>
+      </h1>
+      <p class="hero-lede">
+        Browse free and free-trial creator pages without digging through junk.
+      </p>
+      <div class="hero-filter-pills" aria-label="Homepage shortcuts">
+        {filters.map((filter) => (
+          <a href={filter.href}>
+            <span aria-hidden="true"></span>
+            {filter.label}
+          </a>
+        ))}
+      </div>
+      <div class="hero-trust-grid" aria-label="Directory highlights">
+        {trustItems.map((item, index) => (
+          <div class="hero-trust-item">
+            <span class={`trust-icon icon-${index + 1}`} aria-hidden="true"></span>
+            <div>
+              <strong>{item.title}</strong>
+              <p>{item.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div class="hero-showcase" data-hero-carousel aria-label="Featured creator previews">
+      <button class="hero-arrow is-prev" type="button" data-carousel-prev aria-label="Previous creator">&lt;</button>
+      <div class="hero-stage">
+        {stageCreators.map(({ creator, imageUrl, position, kicker }, index) => (
+          <a
+            class={`hero-stage-card ${position}`}
+            data-carousel-card
+            data-carousel-index={index}
+            href={`/creator/${creator.slug}/`}
+            aria-label={`View ${creator.displayName}`}
+          >
+            <div class="hero-stage-media">
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={creator.displayName}
+                  loading={position === "is-center" ? "eager" : "lazy"}
+                  decoding="async"
+                  referrerpolicy="no-referrer"
+                />
+              ) : (
+                <div class="image-placeholder" aria-hidden="true">{creator.displayName.slice(0, 1)}</div>
+              )}
+            </div>
+            <span class="hero-stage-badge">{kicker}</span>
+            <span class="save-mark" aria-hidden="true"></span>
+            <div class="hero-stage-copy">
+              <h2>{creator.displayName}</h2>
+              <p>@{creator.username}</p>
+              {creator.tags?.length > 0 && <small>{creator.tags.slice(0, 3).join(" | ")}</small>}
+              <span class="button primary">View Profile &gt;</span>
+            </div>
+          </a>
+        ))}
+      </div>
+      <button class="hero-arrow is-next" type="button" data-carousel-next aria-label="Next creator">&gt;</button>
+      <div class="hero-dots" aria-label="Choose featured creator">
+        {stageCreators.map((_, index) => (
+          <button
+            type="button"
+            class={index === 0 ? "is-active" : ""}
+            data-carousel-dot
+            data-carousel-index={index}
+            aria-label={`Show creator ${index + 1}`}
+            aria-current={index === 0 ? "true" : "false"}
+          ></button>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  document.querySelectorAll("[data-hero-carousel]").forEach(function (carousel) {
+    var cards = Array.from(carousel.querySelectorAll("[data-carousel-card]"));
+    var dots = Array.from(carousel.querySelectorAll("[data-carousel-dot]"));
+    var prev = carousel.querySelector("[data-carousel-prev]");
+    var next = carousel.querySelector("[data-carousel-next]");
+    var activeIndex = 0;
+
+    if (cards.length <= 1) {
+      if (prev) prev.hidden = true;
+      if (next) next.hidden = true;
+      dots.forEach(function (dot) {
+        dot.hidden = true;
+      });
+      return;
+    }
+
+    function updateCarousel(nextIndex) {
+      activeIndex = (nextIndex + cards.length) % cards.length;
+
+      cards.forEach(function (card, index) {
+        var leftIndex = (activeIndex - 1 + cards.length) % cards.length;
+        var rightIndex = (activeIndex + 1) % cards.length;
+        card.classList.remove("is-left", "is-center", "is-right", "is-hidden");
+
+        if (index === activeIndex) {
+          card.classList.add("is-center");
+          card.removeAttribute("aria-hidden");
+        } else if (index === leftIndex) {
+          card.classList.add("is-left");
+          card.removeAttribute("aria-hidden");
+        } else if (index === rightIndex) {
+          card.classList.add("is-right");
+          card.removeAttribute("aria-hidden");
+        } else {
+          card.classList.add("is-hidden");
+          card.setAttribute("aria-hidden", "true");
+        }
+      });
+
+      dots.forEach(function (dot, index) {
+        var isActive = index === activeIndex;
+        dot.classList.toggle("is-active", isActive);
+        dot.setAttribute("aria-current", isActive ? "true" : "false");
+      });
+    }
+
+    if (prev) {
+      prev.addEventListener("click", function () {
+        updateCarousel(activeIndex - 1);
+      });
+    }
+
+    if (next) {
+      next.addEventListener("click", function () {
+        updateCarousel(activeIndex + 1);
+      });
+    }
+
+    dots.forEach(function (dot, index) {
+      dot.addEventListener("click", function () {
+        updateCarousel(index);
+      });
+    });
+  });
+</script>

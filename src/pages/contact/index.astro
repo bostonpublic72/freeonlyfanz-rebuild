@@ -1,0 +1,32 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+/* Replace contact email below if contact@freeonlyfanz.com is not your real inbox. */
+const CONTACT_EMAIL = "contact@freeonlyfanz.com";
+---
+
+<BaseLayout
+  title="Contact | FreeOnlyFanz"
+  description="Contact FreeOnlyFanz for general questions. Content removal requests belong on the DMCA page."
+  canonicalPath="/contact/"
+>
+  <article class="info-page container">
+    <header class="info-page-header">
+      <p class="info-eyebrow">Contact</p>
+      <h1>Contact</h1>
+    </header>
+    <div class="info-page-body">
+      <p>
+        For general questions about the directory, email us. We read messages when we can; we are a small project, so a slow
+        reply is normal.
+      </p>
+      <p>
+        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+      </p>
+      <p>
+        For copyright or content removal on <em>this</em> site, use the <a href="/dmca/">DMCA / content removal</a> page so
+        the right details get to the right place.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

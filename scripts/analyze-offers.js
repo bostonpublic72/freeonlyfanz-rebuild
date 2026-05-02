@@ -69,6 +69,9 @@ const CSV_COLUMNS = [
   "isFree",
   "isFreeTrial",
   "hasActiveFreePromo",
+  "isPremiumOnly",
+  "publicEligible",
+  "hiddenReason",
   "visits",
   "subscribers",
   "subscribersToday",
@@ -233,6 +236,48 @@ function getMonetizationBucket(creator) {
     return "cpl";
   }
   return "unknown";
+}
+
+function isKnownValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function hasFreeAccessEvidence(creator) {
+  const offerType = String(creator.offerType || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+  const regularPriceKnown = isKnownValue(creator.regularPrice);
+
+  return Boolean(
+    creator.isFree ||
+      creator.isFreeTrial ||
+      creator.hasActiveFreePromo ||
+      offerType === "free" ||
+      offerType === "free_trial" ||
+      (regularPriceKnown && toNumber(creator.regularPrice) === 0)
+  );
+}
+
+function isManualUnknownAccessAllowed(creator) {
+  const manual = creator.manualCuration || {};
+
+  return Boolean(
+    manual.allowMissingAccessEvidence ||
+      manual.forceFeatureNewInventory ||
+      manual.forceHomepageTest ||
+      creator.allowMissingAccessEvidence
+  );
+}
+
+function isPremiumOnlyCreator(creator) {
+  if (hasFreeAccessEvidence(creator)) {
+    return false;
+  }
+
+  const regularPriceKnown = isKnownValue(creator.regularPrice);
+  if (regularPriceKnown) {
+    return toNumber(creator.regularPrice) > 0;
+  }
+
+  return !isManualUnknownAccessAllowed(creator);
 }
 
 function hasAvatar(creator) {
@@ -972,6 +1017,10 @@ function scoreCreator(creator) {
 }
 
 function chooseRecommendation(creator, analysis) {
+  if (isPremiumOnlyCreator(creator)) {
+    return "premium_hold";
+  }
+
   const monetizationBucket = getMonetizationBucket(creator);
   const visits = toNumber(creator.visits);
   const subscribers = toNumber(creator.subscribers);
@@ -1089,6 +1138,10 @@ function applyManualRecommendationOverrides(creator, recommendation, warnings) {
     finalRecommendation = "exclude_for_now";
     manualPriority = null;
     finalWarnings.push("manually excluded from FreeOnlyFanz placement");
+  } else if (recommendation === "premium_hold") {
+    finalRecommendation = "premium_hold";
+    manualPriority = null;
+    finalWarnings.push("premium-only creator held out of public FreeOnlyFanz pages");
   } else if (manualCuration.forceFeatureNewInventory) {
     finalRecommendation = "feature_new_inventory";
     manualPriority = 90;
@@ -1106,6 +1159,10 @@ function applyManualRecommendationOverrides(creator, recommendation, warnings) {
 }
 
 function assignTrafficSource(creator, recommendation) {
+  if (recommendation === "premium_hold") {
+    return "premium_hold";
+  }
+
   if (recommendation === "keep_revshare_direct") {
     return "warm_social_direct";
   }
@@ -1151,7 +1208,7 @@ function priorityFromScore(score, min, max, divisor = 6) {
 }
 
 function computeHomepagePriority(creator, recommendation, score) {
-  if (recommendation === "exclude_for_now") {
+  if (recommendation === "exclude_for_now" || recommendation === "premium_hold") {
     return 0;
   }
 
@@ -1217,6 +1274,7 @@ function analyzeCreator(creator) {
 
   return {
     ...creator,
+    isPremiumOnly: isPremiumOnlyCreator(creator),
     monetizationBucket,
     recommendedTrafficSource,
     isSiteSeoTestCandidate: [
@@ -1268,8 +1326,18 @@ function summarize(creators) {
     legacyWatchCount: creators.filter((creator) => creator.recommendation === "legacy_watch").length,
     keepRevshareCount: creators.filter((creator) => creator.recommendation === "keep_revshare").length,
     keepRevshareDirectCount: creators.filter((creator) => creator.recommendation === "keep_revshare_direct").length,
+    premiumHoldCount: creators.filter((creator) => creator.recommendation === "premium_hold").length,
     reviewManuallyCount: creators.filter((creator) => creator.recommendation === "review_manually").length,
     excludeForNowCount: creators.filter((creator) => creator.recommendation === "exclude_for_now").length,
+    premiumOnlyCount: creators.filter((creator) => creator.isPremiumOnly).length,
+    publicEligibleCount: creators.filter((creator) => creator.publicEligible).length,
+    hiddenReasons: creators.reduce((counts, creator) => {
+      const reason = creator.hiddenReason || "";
+      if (reason) {
+        counts[reason] = (counts[reason] || 0) + 1;
+      }
+      return counts;
+    }, {}),
     earningsSources,
   };
 }
@@ -1286,8 +1354,9 @@ function recommendationRank(recommendation) {
     keep_revshare: 8,
     keep_revshare_direct: 9,
     legacy_watch: 10,
-    review_manually: 11,
-    exclude_for_now: 12,
+    premium_hold: 11,
+    review_manually: 12,
+    exclude_for_now: 13,
   };
 
   return order[recommendation] || 99;
@@ -1391,6 +1460,7 @@ async function writeReports(creators, earningsStats) {
 }
 
 async function main() {
+  const { getPublicEligibilityDetails } = await import("../src/lib/creators.mjs");
   const importedCreators = await readCreators();
   const manualCuration = await readManualCuration();
   const transactionsData = await readTransactionsIfExists();
@@ -1400,6 +1470,10 @@ async function main() {
 
   const analyzedCreators = creators
     .map(analyzeCreator)
+    .map((creator) => ({
+      ...creator,
+      ...getPublicEligibilityDetails(creator),
+    }))
     .sort(
       (a, b) =>
         toNumber(b.homepagePriority) - toNumber(a.homepagePriority) ||
@@ -1434,8 +1508,11 @@ async function main() {
   console.log(`legacy_watch: ${report.summary.legacyWatchCount}`);
   console.log(`keep_revshare: ${report.summary.keepRevshareCount}`);
   console.log(`keep_revshare_direct: ${report.summary.keepRevshareDirectCount}`);
+  console.log(`premium_hold: ${report.summary.premiumHoldCount}`);
   console.log(`review_manually: ${report.summary.reviewManuallyCount}`);
   console.log(`exclude_for_now: ${report.summary.excludeForNowCount}`);
+  console.log(`public eligible: ${report.summary.publicEligibleCount}`);
+  console.log(`premium-only hidden: ${report.summary.premiumOnlyCount}`);
   console.log(`JSON report saved to: ${path.relative(ROOT, JSON_REPORT_PATH)}`);
   console.log(`CSV report saved to: ${path.relative(ROOT, CSV_REPORT_PATH)}`);
 }

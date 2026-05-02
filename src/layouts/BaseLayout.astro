@@ -3,8 +3,8 @@ import "../styles/global.css";
 import { GA_ID, SITE_NAME, absoluteUrl } from "../lib/site.mjs";
 
 const {
-  title = "FreeOnlyFanz - Curated Free OnlyFans Creators",
-  description = "Browse curated free and free-trial OnlyFans creators. Updated creator picks, free pages, and new profiles to check out.",
+  title = "FreeOnlyFanz - Curated Free Creator Directory",
+  description = "Browse curated free and free-trial creator picks, featured pages, and new finds in one independent directory.",
   canonicalPath = Astro.url.pathname,
 } = Astro.props;
 
@@ -44,15 +44,48 @@ const canonicalUrl = absoluteUrl(canonicalPath);
       <header class="site-header">
         <nav class="nav" aria-label="Primary navigation">
           <a class="brand" href="/">
-            <span class="brand-mark">FO</span>
-            <span>FreeOnlyFanz</span>
+            <span class="brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 48 48" role="img">
+                <path
+                  d="M24 41S6 30.8 6 16.8C6 10 10.8 6 16.3 6c3.3 0 6.1 1.5 7.7 4.1C25.6 7.5 28.4 6 31.7 6 37.2 6 42 10 42 16.8 42 30.8 24 41 24 41Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </span>
+            <span class="brand-copy">
+              <span class="brand-name">FreeOnly<span>Fanz</span></span>
+            </span>
           </a>
           <div class="nav-links">
-            <a href="/category/free/">Free</a>
-            <a href="/category/free-trial/">Free Trial</a>
-            <a href="/category/new/">New</a>
-            <a href="/category/featured/">Featured</a>
+            <a href="/#new">New Picks</a>
+            <a href="/#free-trials">Free Trials</a>
+            <a href="/#featured">Featured</a>
+            <a href="/#popular">Popular</a>
+            <a href="/categories/">Categories</a>
           </div>
+          <form class="site-search" action="/creators/" method="get" role="search">
+            <label class="sr-only" for="site-search-input">Search creators</label>
+            <input id="site-search-input" type="search" name="q" placeholder="Search creators..." />
+            <button type="submit" aria-label="Search creators">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="m21 21-4.3-4.3m2.3-5.2a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </button>
+          </form>
+          <a class="nav-cta" href="/creators/">
+            Browse All Creators
+            <span aria-hidden="true">&gt;</span>
+          </a>
         </nav>
       </header>
       <main>
@@ -60,11 +93,71 @@ const canonicalUrl = absoluteUrl(canonicalPath);
       </main>
       <footer class="site-footer">
         <div class="container footer-inner">
-          <div>
-            <strong>FreeOnlyFanz</strong>
+          <div class="footer-brand-block">
+            <a class="brand footer-brand" href="/">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 48 48" role="img">
+                  <path
+                    d="M24 41S6 30.8 6 16.8C6 10 10.8 6 16.3 6c3.3 0 6.1 1.5 7.7 4.1C25.6 7.5 28.4 6 31.7 6 37.2 6 42 10 42 16.8 42 30.8 24 41 24 41Z"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              <span class="brand-name">FreeOnly<span>Fanz</span></span>
+            </a>
             <p>Curated free and free-trial creator picks. Some links may be sponsored.</p>
+            <div class="social-row" aria-label="Social links">
+              <a
+                href="https://x.com/FreeOnlyFanz_"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow on X"
+              >
+                X
+              </a>
+            </div>
           </div>
-          <p>18+ only. FreeOnlyFanz is an independent curated directory and is not affiliated with OnlyFans.</p>
+          <div class="footer-column">
+            <h2>Quick Links</h2>
+            <a href="/#new">New Picks</a>
+            <a href="/#free-trials">Free Trials</a>
+            <a href="/#featured">Featured</a>
+            <a href="/#popular">Popular</a>
+            <a href="/categories/">Categories</a>
+            <a href="/creators/">Browse All Creators</a>
+          </div>
+          <div class="footer-column">
+            <h2>Info</h2>
+            <a href="/about/">About</a>
+            <a href="/how-it-works/">How It Works</a>
+            <a href="/faq/">FAQ</a>
+            <a href="/contact/">Contact</a>
+            <a href="/privacy/">Privacy Policy</a>
+            <a href="/terms/">Terms of Use</a>
+            <a href="/dmca/">DMCA / Content Removal</a>
+          </div>
+          <div class="footer-column footer-follow">
+            <h2>Follow FreeOnlyFanz</h2>
+            <p>New creator picks, free trials, and site updates.</p>
+            <a
+              class="button footer-follow-cta"
+              href="https://x.com/FreeOnlyFanz_"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Follow on X
+            </a>
+          </div>
+        </div>
+        <div class="footer-legal container">
+          <span>18+ only. Some links may be sponsored.</span>
+          <span>
+            FreeOnlyFanz is an independent curated directory and is not affiliated with any platform.
+          </span>
         </div>
       </footer>
     </div>

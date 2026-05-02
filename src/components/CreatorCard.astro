@@ -5,9 +5,10 @@ const { creator } = Astro.props;
 const imageUrl = getImageUrl(creator);
 const badges = getCreatorBadges(creator);
 const ctaText = getCardCtaText();
+const tagLine = creator.tags?.length > 0 ? creator.tags.slice(0, 2).join(" | ") : "Creator Pick";
 ---
 
-<article class="creator-card">
+<article class="creator-card" data-display-name={creator.displayName} data-username={creator.username || ""}>
   <a href={`/creator/${creator.slug}/`} aria-label={`View ${creator.displayName}`}>
     <div class="creator-media">
       {imageUrl ? (
@@ -17,15 +18,17 @@ const ctaText = getCardCtaText();
       )}
       {badges.length > 0 && (
         <div class="badge-row">
-          {badges.map((badge, index) => <span class={`badge ${index === 0 ? "is-accent" : ""}`}>{badge}</span>)}
+          {badges.slice(0, 1).map((badge, index) => <span class={`badge ${index === 0 ? "is-accent" : ""}`}>{badge}</span>)}
         </div>
       )}
-    </div>
-    <div class="creator-card-body">
-      <div>
+      <span class="save-mark" aria-hidden="true"></span>
+      <div class="creator-card-overlay">
         <h3 class="creator-name">{creator.displayName}</h3>
         <p class="creator-username">@{creator.username}</p>
+        <p class="creator-tags">{tagLine}</p>
       </div>
+    </div>
+    <div class="creator-card-body">
       <span class="button secondary">{ctaText}</span>
     </div>
   </a>

@@ -1,15 +1,108 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import CreatorSection from "../components/CreatorSection.astro";
+import HomeHero from "../components/home/HomeHero.astro";
+import HomeSection from "../components/home/HomeSection.astro";
 import { absoluteUrl } from "../lib/site.mjs";
 import { getHomepageSections } from "../lib/creators.mjs";
 
 const sections = getHomepageSections();
+const SECTION_ANCHOR_IDS = {
+  "new-free-creators": "new",
+  "featured-free-creators": "featured",
+  "free-trial-creators": "free-trials",
+  "more-free-picks": "more-free",
+  "popular-picks": "popular",
+};
+const getSection = (id) => sections.find((section) => section.id === id);
+const allHomepageCreators = sections.flatMap((section) => section.creators);
+const heroBlockedSlugs = new Set(["natatsgirl"]);
+const findCreator = (slug) => allHomepageCreators.find((creator) => creator.slug === slug);
+const uniqueCreators = (groups, limit = 6) => {
+  const seen = new Set();
+  const output = [];
+
+  for (const group of groups) {
+    for (const creator of group || []) {
+      if (!creator?.slug || seen.has(creator.slug) || heroBlockedSlugs.has(creator.slug)) {
+        continue;
+      }
+      seen.add(creator.slug);
+      output.push(creator);
+      if (output.length >= limit) {
+        return output;
+      }
+    }
+  }
+
+  return output;
+};
+
+const heroCreators = uniqueCreators(
+  [
+    [
+      getSection("new-free-creators")?.creators?.[0],
+      getSection("new-free-creators")?.creators?.[1],
+      findCreator("miamicandy"),
+    ],
+    getSection("new-free-creators")?.creators,
+    getSection("featured-free-creators")?.creators,
+    getSection("free-trial-creators")?.creators,
+    allHomepageCreators,
+  ],
+  7
+);
+const sectionCopy = {
+  "new-free-creators": {
+    title: "New Free Profiles",
+    kicker: "Fresh creator pages added to the free discovery shelf.",
+    viewHref: "/category/new/",
+  },
+  "featured-free-creators": {
+    title: "Featured Picks",
+    kicker: "Standout pages selected for fast, high-intent browsing.",
+    viewHref: "/category/featured/",
+  },
+  "free-trial-creators": {
+    title: "Free Trial Picks",
+    kicker: "Trial-friendly pages with quick paths to open and compare.",
+    viewHref: "/category/free-trial/",
+  },
+  "more-free-picks": {
+    title: "More Free Picks",
+    kicker: "Additional free profiles worth keeping in the rotation.",
+    viewHref: "/category/free/",
+  },
+  "popular-picks": {
+    title: "Popular Picks",
+    kicker: "Established profiles and longtime directory favorites.",
+    viewHref: "/category/free/",
+  },
+};
+const enhancedSections = sections.map((section) => ({
+  ...section,
+  ...(sectionCopy[section.id] || {}),
+  anchorId: SECTION_ANCHOR_IDS[section.id] || section.id,
+}));
+const displaySection = (id, limit, variant = "") => {
+  const section = enhancedSections.find((item) => item.id === id);
+  return section
+    ? {
+        ...section,
+        variant,
+        creators: section.creators.slice(0, limit),
+      }
+    : null;
+};
+const newSection = displaySection("new-free-creators", 6);
+const featuredSection = displaySection("featured-free-creators", 5);
+const freeTrialSection = displaySection("free-trial-creators", 4, "panel");
+const popularSection = displaySection("popular-picks", 4, "panel");
+const moreFreeSection = displaySection("more-free-picks", 6);
 const itemListCreators = sections.flatMap((section) => section.creators).slice(0, 20);
 const itemListSchema = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  name: "Curated Free OnlyFans Creator Picks",
+  name: "Curated Free Creator Picks",
   itemListElement: itemListCreators.map((creator, index) => ({
     "@type": "ListItem",
     position: index + 1,
@@ -20,26 +113,23 @@ const itemListSchema = {
 ---
 
 <BaseLayout
-  title="FreeOnlyFanz - Curated Free OnlyFans Creators"
-  description="Browse curated free and free-trial OnlyFans creators. Updated creator picks, free pages, and new profiles to check out."
+  title="FreeOnlyFanz - Curated Free Creator Directory"
+  description="Browse curated free and free-trial creator picks, new profiles, featured shelves, and more free browsing."
   canonicalPath="/"
 >
-  <section class="hero">
-    <div class="container hero-copy">
-      <p class="eyebrow">Curated Free Creator Picks</p>
-      <h1>FreeOnlyFanz</h1>
-      <p>
-        Browse selected free and free-trial creator pages, including new profiles being tested for FreeOnlyFanz placement.
-      </p>
-      <div class="hero-actions">
-        <a class="pill-link" href="#new-free-creators">New Picks</a>
-        <a class="pill-link" href="#featured-free-creators">Featured</a>
-        <a class="pill-link" href="#free-trial-creators">Free Trials</a>
-      </div>
-    </div>
-  </section>
+  <HomeHero creators={heroCreators} />
 
-  {sections.map((section) => <CreatorSection {...section} />)}
+  {newSection && <HomeSection {...newSection} />}
+  {featuredSection && <HomeSection {...featuredSection} />}
+  {(freeTrialSection || popularSection) && (
+    <section class="split-panels" aria-label="More curated picks">
+      <div class="container split-panel-grid">
+        {freeTrialSection && <HomeSection {...freeTrialSection} />}
+        {popularSection && <HomeSection {...popularSection} />}
+      </div>
+    </section>
+  )}
+  {moreFreeSection && <HomeSection {...moreFreeSection} />}
 
   <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
 </BaseLayout>

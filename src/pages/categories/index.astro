@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCategoryDefinitions, loadCreators } from "../../lib/creators.mjs";
+
+const allCreators = loadCreators();
+const categoryCards = getCategoryDefinitions().map((category) => ({
+  ...category,
+  href: `/category/${category.slug}/`,
+  count: allCreators.filter(category.filter).length,
+}));
+---
+
+<BaseLayout
+  title="Categories | FreeOnlyFanz"
+  description="Browse FreeOnlyFanz categories: free profiles, free trials, new picks, and featured creator pages. Shelves can overlap."
+  canonicalPath="/categories/"
+>
+  <section class="container category-intro categories-hub-intro">
+    <p class="eyebrow">Categories</p>
+    <h1>Find your lane</h1>
+    <p class="categories-hub-lead">
+      Pick a shelf to browse. Some creators may appear in more than one category—that is normal here.
+    </p>
+  </section>
+
+  <section class="categories-hub">
+    <div class="container">
+      <div class="category-hub-grid">
+        {categoryCards.map((cat) => (
+          <article class="category-hub-card">
+            <div class="category-hub-card-head">
+              <h2>{cat.title}</h2>
+              <p class="category-hub-count">{cat.count} creators</p>
+            </div>
+            <p class="category-hub-desc">{cat.description}</p>
+            <a class="button category-hub-cta" href={cat.href}>
+              Browse category
+            </a>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
