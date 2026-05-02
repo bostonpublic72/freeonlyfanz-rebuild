@@ -4,3 +4,10 @@ npm-debug.log*
 astro-dev*.log
 .astro/
 dist/
+
+# generated data/build artifacts
+data/raw/
+data/reports/
+data/creators.json
+*.zip
+*.log
