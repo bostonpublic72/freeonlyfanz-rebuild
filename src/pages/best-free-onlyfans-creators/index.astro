@@ -1,0 +1,68 @@
+---
+import GuideLanding from "../../components/GuideLanding.astro";
+import { getBestFreeGuideCreators } from "../../lib/guide-pages.mjs";
+
+const creators = getBestFreeGuideCreators(12);
+const relatedLinks = [
+  {
+    href: "/category/featured/",
+    label: "Featured Picks",
+    description: "See the featured creator category.",
+  },
+  {
+    href: "/category/free/",
+    label: "Free Profiles",
+    description: "Browse free and free-trial profiles.",
+  },
+  {
+    href: "/creators/",
+    label: "All Creators",
+    description: "Search the full public list.",
+  },
+  {
+    href: "/categories/",
+    label: "Categories",
+    description: "Browse all public shelves.",
+  },
+];
+const faqs = [
+  {
+    question: "How are best free creator picks chosen?",
+    answer:
+      "This page uses the current public FreeOnlyFanz list and sorts free or free-trial creators by site priority and score.",
+  },
+  {
+    question: "Are these creators official or verified?",
+    answer:
+      "No. FreeOnlyFanz is an independent directory and does not claim official or verified status for creator pages.",
+  },
+  {
+    question: "Are all links completely free?",
+    answer:
+      "No. The listed creators have free or free-trial access signals, but external creator pages may include paid content after you open them.",
+  },
+  {
+    question: "Why do some creators appear in more than one category?",
+    answer:
+      "Categories can overlap when a creator is free, trial-friendly, featured, or newly added at the same time.",
+  },
+];
+---
+
+<GuideLanding
+  title="Best Free Creator Picks | FreeOnlyFanz"
+  description="Explore featured free creator picks from the current FreeOnlyFanz creator list."
+  canonicalPath="/best-free-onlyfans-creators/"
+  h1="Best Free Creator Picks"
+  intro="A focused landing page for higher-priority free and free-trial creator picks from the current FreeOnlyFanz list."
+  explanationTitle="Featured Free Picks In One Place"
+  paragraphs={[
+    "This page is designed for quick comparison. It highlights public eligible creator pages with free or free-trial access signals, then sorts them by priority and score.",
+    "Use the cards as a starting point, not a promise about what is available after you leave FreeOnlyFanz. External creator pages can change and may include paid content.",
+  ]}
+  creators={creators}
+  creatorSectionTitle="Featured Free Creator Cards"
+  creatorSectionKicker="Sorted by homepage priority, then score."
+  relatedLinks={relatedLinks}
+  faqs={faqs}
+/>

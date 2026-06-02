@@ -1,7 +1,7 @@
 ---
 import { getCreatorBadges, getImageUrl } from "../lib/creators.mjs";
 
-const { creator, priority = "secondary" } = Astro.props;
+const { creator, priority = "secondary", hidden = false } = Astro.props;
 const imageUrl = getImageUrl(creator);
 const badges = getCreatorBadges(creator);
 const blockedTqTagPattern = /\b(anal|ass|boobs?|cock|cum|dick|fetish|nudes?|pussy|sex|tits?|xxx)\b/i;
@@ -10,7 +10,7 @@ const tagLine = displayTags.length > 0 ? displayTags.join(" | ") : "Free Pick";
 const outboundUrl = creator.tqTrackingUrl || creator.trackingUrl;
 ---
 
-<article class="creator-card tq-card">
+<article class="creator-card tq-card" data-creator-slug={creator.slug} hidden={hidden}>
   <a
     href={outboundUrl}
     target="_blank"

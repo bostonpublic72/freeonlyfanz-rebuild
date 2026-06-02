@@ -184,5 +184,27 @@ const trustItems = [
         updateCarousel(index);
       });
     });
+
+    updateCarousel(Math.floor(Math.random() * cards.length));
+
+    if (!window.matchMedia || !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      var rotationTimer = window.setInterval(function () {
+        var nextIndex = cards.length > 2 ? activeIndex : activeIndex + 1;
+
+        while (cards.length > 2 && nextIndex === activeIndex) {
+          nextIndex = Math.floor(Math.random() * cards.length);
+        }
+
+        updateCarousel(nextIndex);
+      }, 6500);
+
+      carousel.addEventListener("mouseenter", function () {
+        window.clearInterval(rotationTimer);
+      });
+
+      carousel.addEventListener("focusin", function () {
+        window.clearInterval(rotationTimer);
+      });
+    }
   });
 </script>

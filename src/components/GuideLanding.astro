@@ -1,0 +1,101 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import CreatorCard from "./CreatorCard.astro";
+
+const {
+  title,
+  description,
+  canonicalPath,
+  eyebrow = "FreeOnlyFanz Guide",
+  h1,
+  intro,
+  explanationTitle,
+  paragraphs = [],
+  creators = [],
+  creatorSectionTitle = "Creator Picks",
+  creatorSectionKicker = "",
+  relatedLinks = [],
+  faqs = [],
+  disclosure = "18+ only. Some external creator pages may include paid content after you open them. Some links may be sponsored. FreeOnlyFanz is independent and is not affiliated with OnlyFans.",
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description} canonicalPath={canonicalPath}>
+  <section class="guide-hero">
+    <div class="container guide-hero-inner">
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{h1}</h1>
+      <p>{intro}</p>
+      {relatedLinks.length > 0 && (
+        <div class="guide-quick-links" aria-label="Related guide links">
+          {relatedLinks.slice(0, 4).map((link) => (
+            <a href={link.href}>{link.label}</a>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <section class="guide-section guide-copy-section">
+    <div class="container guide-copy">
+      <h2>{explanationTitle}</h2>
+      {paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+    </div>
+  </section>
+
+  {creators.length > 0 && (
+    <section class="guide-section" aria-labelledby="guide-creators-title">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-copy">
+            <h2 id="guide-creators-title">{creatorSectionTitle}</h2>
+            {creatorSectionKicker && <p class="section-kicker">{creatorSectionKicker}</p>}
+          </div>
+        </div>
+        <div class="creator-grid guide-creator-grid">
+          {creators.map((creator) => <CreatorCard creator={creator} />)}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {relatedLinks.length > 0 && (
+    <section class="guide-section guide-related-section" aria-labelledby="guide-related-title">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-copy">
+            <h2 id="guide-related-title">Related Pages</h2>
+          </div>
+        </div>
+        <div class="guide-related-grid">
+          {relatedLinks.map((link) => (
+            <a class="guide-related-link" href={link.href}>
+              <span>{link.label}</span>
+              {link.description && <small>{link.description}</small>}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  {faqs.length > 0 && (
+    <section class="guide-section guide-faq-section" aria-labelledby="guide-faq-title">
+      <div class="container guide-faq">
+        <h2 id="guide-faq-title">FAQ</h2>
+        {faqs.map((faq) => (
+          <article class="guide-faq-item">
+            <h3>{faq.question}</h3>
+            <p>{faq.answer}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <section class="guide-disclosure">
+    <div class="container">
+      <p>{disclosure}</p>
+    </div>
+  </section>
+</BaseLayout>

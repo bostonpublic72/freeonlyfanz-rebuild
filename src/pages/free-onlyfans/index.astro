@@ -1,0 +1,68 @@
+---
+import GuideLanding from "../../components/GuideLanding.astro";
+import { getFreeGuideCreators } from "../../lib/guide-pages.mjs";
+
+const creators = getFreeGuideCreators(12);
+const relatedLinks = [
+  {
+    href: "/category/free/",
+    label: "Free Profiles",
+    description: "Browse the main free creator shelf.",
+  },
+  {
+    href: "/category/free-trial/",
+    label: "Free Trials",
+    description: "See current free-trial creator picks.",
+  },
+  {
+    href: "/creators/",
+    label: "All Creators",
+    description: "Search the public FreeOnlyFanz list.",
+  },
+  {
+    href: "/categories/",
+    label: "Categories",
+    description: "Compare every public category.",
+  },
+];
+const faqs = [
+  {
+    question: "What is a free creator page?",
+    answer:
+      "A free creator page is a creator profile that can be opened without an upfront subscription price, though the external page may still include optional paid content.",
+  },
+  {
+    question: "What is a free-trial creator page?",
+    answer:
+      "A free-trial creator page gives limited free access for a trial window or a current free offer before any paid renewal or paid content may appear.",
+  },
+  {
+    question: "Are all links completely free?",
+    answer:
+      "No. FreeOnlyFanz focuses on free and free-trial access, but external creator pages may include paid messages, paid posts, tips, or subscription changes after you open them.",
+  },
+  {
+    question: "Why do some creators appear in more than one category?",
+    answer:
+      "A creator can be free, new, featured, or trial-friendly at the same time, so categories can overlap.",
+  },
+];
+---
+
+<GuideLanding
+  title="Free OnlyFans Creator Pages | FreeOnlyFanz"
+  description="Browse curated free creator pages and free-trial profiles on FreeOnlyFanz."
+  canonicalPath="/free-onlyfans/"
+  h1="Free Creator Pages Worth Checking Out"
+  intro="FreeOnlyFanz keeps the free creator search simple: useful public picks, clean categories, and creator cards that lead to internal profile pages first."
+  explanationTitle="A Cleaner Way To Browse Free Creator Pages"
+  paragraphs={[
+    "Free creator pages can be hard to sort through when every list looks the same. FreeOnlyFanz focuses on public, free-access creator pages and nearby free-trial picks so you can browse without digging through junk.",
+    "The cards below come from the current public FreeOnlyFanz list. Each card opens an internal profile page with basic details before you choose whether to leave for the external creator page.",
+  ]}
+  creators={creators}
+  creatorSectionTitle="Free Creator Picks"
+  creatorSectionKicker="Public eligible creators with free or active free-promo access."
+  relatedLinks={relatedLinks}
+  faqs={faqs}
+/>

@@ -83,18 +83,20 @@ const enhancedSections = sections.map((section) => ({
   ...(sectionCopy[section.id] || {}),
   anchorId: SECTION_ANCHOR_IDS[section.id] || section.id,
 }));
-const displaySection = (id, limit, variant = "") => {
+const displaySection = (id, limit, variant = "", randomize = false) => {
   const section = enhancedSections.find((item) => item.id === id);
   return section
     ? {
         ...section,
         variant,
-        creators: section.creators.slice(0, limit),
+        randomize,
+        displayLimit: limit,
+        creators: randomize ? section.creators : section.creators.slice(0, limit),
       }
     : null;
 };
-const newSection = displaySection("new-free-creators", 6);
-const featuredSection = displaySection("featured-free-creators", 5);
+const newSection = displaySection("new-free-creators", 6, "", true);
+const featuredSection = displaySection("featured-free-creators", 5, "", true);
 const freeTrialSection = displaySection("free-trial-creators", 4, "panel");
 const popularSection = displaySection("popular-picks", 4, "panel");
 const moreFreeSection = displaySection("more-free-picks", 6);
@@ -130,6 +132,33 @@ const itemListSchema = {
     </section>
   )}
   {moreFreeSection && <HomeSection {...moreFreeSection} />}
+
+  <script is:inline>
+    (function () {
+      function shuffle(items) {
+        for (var index = items.length - 1; index > 0; index -= 1) {
+          var swapIndex = Math.floor(Math.random() * (index + 1));
+          var current = items[index];
+          items[index] = items[swapIndex];
+          items[swapIndex] = current;
+        }
+        return items;
+      }
+
+      document.querySelectorAll("[data-random-creator-grid]").forEach(function (grid) {
+        var items = shuffle(Array.from(grid.children));
+        var limit = parseInt(grid.dataset.randomLimit || items.length, 10);
+        var fragment = document.createDocumentFragment();
+
+        items.forEach(function (item, index) {
+          item.hidden = index >= limit;
+          fragment.appendChild(item);
+        });
+
+        grid.appendChild(fragment);
+      });
+    })();
+  </script>
 
   <script type="application/ld+json" set:html={JSON.stringify(itemListSchema)} />
 </BaseLayout>

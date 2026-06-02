@@ -1,14 +1,20 @@
 ---
 import { getCardCtaText, getCreatorBadges, getImageUrl } from "../lib/creators.mjs";
 
-const { creator } = Astro.props;
+const { creator, hidden = false } = Astro.props;
 const imageUrl = getImageUrl(creator);
 const badges = getCreatorBadges(creator);
 const ctaText = getCardCtaText();
 const tagLine = creator.tags?.length > 0 ? creator.tags.slice(0, 2).join(" | ") : "Creator Pick";
 ---
 
-<article class="creator-card" data-display-name={creator.displayName} data-username={creator.username || ""}>
+<article
+  class="creator-card"
+  data-creator-slug={creator.slug}
+  data-display-name={creator.displayName}
+  data-username={creator.username || ""}
+  hidden={hidden}
+>
   <a href={`/creator/${creator.slug}/`} aria-label={`View ${creator.displayName}`}>
     <div class="creator-media">
       {imageUrl ? (

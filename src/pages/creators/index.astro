@@ -12,6 +12,12 @@ const creators = loadCreators().filter((creator) => {
 });
 
 const totalCount = creators.length;
+const relatedLinks = [
+  { href: "/free-onlyfans/", label: "Free Creator Pages" },
+  { href: "/free-trial-onlyfans/", label: "Free Trial Picks" },
+  { href: "/best-free-onlyfans-creators/", label: "Best Free Picks" },
+  { href: "/categories/", label: "Categories" },
+];
 ---
 
 <BaseLayout
@@ -25,6 +31,9 @@ const totalCount = creators.length;
     <p class="browse-all-sub">
       Explore the current FreeOnlyFanz creator list, including free and free-trial profiles.
     </p>
+    <div class="category-links browse-related-links" aria-label="Related creator guides">
+      {relatedLinks.map((link) => <a class="pill-link" href={link.href}>{link.label}</a>)}
+    </div>
     <p id="browse-filter-status" class="browse-all-filter-note" hidden></p>
   </section>
 
@@ -59,7 +68,9 @@ const totalCount = creators.length;
         cards.forEach(function (el) {
           var name = (el.getAttribute("data-display-name") || "").toLowerCase();
           var user = (el.getAttribute("data-username") || "").toLowerCase();
-          var match = name.indexOf(q) !== -1 || user.indexOf(q) !== -1;
+          var slug = (el.getAttribute("data-creator-slug") || "").toLowerCase();
+          var match =
+            name.indexOf(q) !== -1 || user.indexOf(q) !== -1 || slug.indexOf(q) !== -1;
           el.style.display = match ? "" : "none";
           if (match) shown += 1;
         });

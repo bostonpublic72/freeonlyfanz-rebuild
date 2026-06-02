@@ -1,0 +1,68 @@
+---
+import GuideLanding from "../../components/GuideLanding.astro";
+import { getBestFreeGuideCreators } from "../../lib/guide-pages.mjs";
+
+const creators = getBestFreeGuideCreators(8);
+const relatedLinks = [
+  {
+    href: "/category/free/",
+    label: "Free Profiles",
+    description: "Browse free and free-promo creator pages.",
+  },
+  {
+    href: "/category/free-trial/",
+    label: "Free Trials",
+    description: "Compare free-trial creator picks.",
+  },
+  {
+    href: "/creators/",
+    label: "All Creators",
+    description: "Search the public FreeOnlyFanz list.",
+  },
+  {
+    href: "/categories/",
+    label: "Categories",
+    description: "Browse all current public shelves.",
+  },
+];
+const faqs = [
+  {
+    question: "What is a free creator page?",
+    answer:
+      "A free creator page can usually be opened without an upfront subscription price, though paid posts, tips, or messages may still exist on the external page.",
+  },
+  {
+    question: "What is a free-trial creator page?",
+    answer:
+      "A free-trial page usually gives temporary access or a current promotional path before any renewal or paid option appears.",
+  },
+  {
+    question: "What is a paid or premium creator page?",
+    answer:
+      "A paid or premium page usually requires payment before access. FreeOnlyFanz can explain the concept, but we are not promoting paid-only creator cards tonight.",
+  },
+  {
+    question: "Are all links completely free?",
+    answer:
+      "No. FreeOnlyFanz prioritizes free and free-trial access, but external pages may include paid content after you open them.",
+  },
+];
+---
+
+<GuideLanding
+  title="Free vs Paid Creator Pages | FreeOnlyFanz"
+  description="Understand the difference between free, free-trial, and paid creator pages."
+  canonicalPath="/onlyfans-free-vs-paid/"
+  h1="Free vs Paid Creator Pages"
+  intro="Creator pages can be free, free-trial, or paid. FreeOnlyFanz currently prioritizes free and free-trial discovery."
+  explanationTitle="The Simple Difference"
+  paragraphs={[
+    "Free creator pages generally let you open or follow the page without an upfront subscription price. Free-trial pages usually give temporary or promotional access. Paid or premium pages usually require payment before access.",
+    "FreeOnlyFanz keeps paid-only profiles out of public card sections for now. The cards below are public eligible free or free-trial creators only, and external pages may still include paid content after you open them.",
+  ]}
+  creators={creators}
+  creatorSectionTitle="Start With Free And Trial Picks"
+  creatorSectionKicker="No paid-only creator cards are shown here."
+  relatedLinks={relatedLinks}
+  faqs={faqs}
+/>

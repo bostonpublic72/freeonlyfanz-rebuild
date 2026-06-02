@@ -11,7 +11,16 @@ export function getStaticPaths() {
 }
 
 const { category } = Astro.props;
-const creators = loadCreators().filter(category.filter).slice(0, 24);
+const creators = loadCreators().filter(category.filter);
+const categoryGuideLinks = {
+  free: [
+    { href: "/free-onlyfans/", label: "Free Creator Pages" },
+    { href: "/free-onlyfans-accounts/", label: "Free Creator Accounts" },
+  ],
+  "free-trial": [{ href: "/free-trial-onlyfans/", label: "Free Trial Guide" }],
+  featured: [{ href: "/best-free-onlyfans-creators/", label: "Best Free Picks" }],
+};
+const guideLinks = categoryGuideLinks[category.slug] || [];
 ---
 
 <BaseLayout
@@ -23,10 +32,18 @@ const creators = loadCreators().filter(category.filter).slice(0, 24);
     <p class="eyebrow">FreeOnlyFanz Category</p>
     <h1>{category.title}</h1>
     <p>{category.description}</p>
+    {guideLinks.length > 0 && (
+      <div class="category-links" aria-label="Related guides">
+        {guideLinks.map((link) => <a class="pill-link" href={link.href}>{link.label}</a>)}
+      </div>
+    )}
   </section>
 
   <section class="section">
     <div class="container">
+      <p class="browse-all-meta">
+        {creators.length} creator{creators.length === 1 ? "" : "s"} listed
+      </p>
       <div class="creator-grid">
         {creators.map((creator) => <CreatorCard creator={creator} />)}
       </div>

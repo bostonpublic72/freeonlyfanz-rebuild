@@ -1,8 +1,6 @@
 # FreeOnlyFanz Rebuild
 
-FreeOnlyFanz is being rebuilt as a clean SEO-focused creator discovery site powered by OnlyTraffic campaign data.
-
-This phase does not build frontend pages. The current goal is to import OnlyTraffic inventory, normalize creator/campaign data, identify duplicates, separate traffic-source assumptions, and generate a human-reviewable recommendation report before any creator pages are created.
+FreeOnlyFanz is a static Astro site backed by OnlyTraffic campaign data: import, analyze, build, then publish to cPanel.
 
 ## Setup
 
@@ -22,7 +20,7 @@ ONLYTRAFFIC_API_KEY=your_onlytraffic_api_key_here
 
 Do not commit `.env`. It is intentionally ignored by git.
 
-## Commands
+## Data pipeline
 
 Import OnlyTraffic campaigns and generate normalized creator data:
 
@@ -48,7 +46,45 @@ Refresh the full data pipeline:
 npm run refresh:data
 ```
 
-## Outputs
+Manual curation overrides live in `data/manual-curation.json` (for example `forceFeatureNewInventory`).
+
+## Build the site
+
+```bash
+npm run analyze:offers
+npm run build
+```
+
+Output is written to `dist/`.
+
+Preview locally:
+
+```bash
+npm run preview
+```
+
+## Deploy to production (manual upload)
+
+There is no automatic deploy configured by default. After each build, upload the site to cPanel yourself.
+
+1. Run `npm run build` so `dist/` is up to date.
+2. Zip the **contents** of `dist/` (not the `dist` folder itself), so `index.html` is at the root of the zip.
+   - On Windows PowerShell from the project root:
+     ```powershell
+     Compress-Archive -Path dist\* -DestinationPath freeonlyfanz-site.zip -Force
+     ```
+3. In cPanel **File Manager**, open `public_html` (or your site root).
+4. Upload `freeonlyfanz-site.zip` and **Extract** into that folder.
+5. Confirm `index.html` sits directly in `public_html`, not inside `public_html/dist/`.
+6. Hard refresh the live site (Ctrl+F5).
+
+Extracting over the old site updates matching files but may leave orphan folders under `creator/` from previous uploads. Delete any extra creator directories if you want the live site to match the current build exactly.
+
+### Optional: FTP deploy script
+
+`npm run deploy` / `npm run deploy:upload` can upload `dist/` via FTP if you add `FTP_HOST`, `FTP_USER`, and `FTP_PASSWORD` to `.env`. Until those are set, use the manual zip flow above.
+
+## Data outputs
 
 The importer writes:
 
@@ -63,14 +99,12 @@ The analyzer writes:
 - `data/reports/offer-analysis.json`
 - `data/reports/offer-analysis.csv`
 
-## Traffic-Source Notes
+## Traffic-source notes
 
 Warm Snapchat/Instagram traffic goes directly to OnlyFans affiliate links, not through FreeOnlyFanz. Known warm-social revshare winners are preserved as direct winners and are not automatically promoted for SEO pages.
 
-FreeOnlyFanz SEO traffic should be evaluated separately and should generally favor selective CPL, free, and free-trial offers with usable images, reasonable country availability, and conversion evidence.
+FreeOnlyFanz SEO traffic should be evaluated separately and should generally favor free and free-trial revshare offers with usable images, reasonable country availability, and conversion evidence.
 
-TwerkQueens popunder/nav-tab traffic is colder and should also be evaluated separately, usually favoring low-friction CPL or free-trial offers.
+TwerkQueens popunder/nav-tab traffic is colder and should also be evaluated separately, usually favoring low-friction free-trial offers.
 
-## Current Stop Point
-
-Homepage, category pages, creator pages, sitemap generation, and frontend components are intentionally not built yet.
+CPL commission campaigns are excluded from the public FreeOnlyFanz directory in `src/lib/creators.mjs`.

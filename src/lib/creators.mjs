@@ -35,12 +35,14 @@ const PUBLIC_FREE_INVENTORY_RECOMMENDATIONS = new Set([
 ]);
 
 const SECTION_LIMITS = {
-  feature_new_inventory: 8,
+  recent: 24,
   featured: 12,
   free_trial: 12,
   cpl_tests: 12,
   popular: 6,
 };
+
+const RECENT_CREATOR_DAYS = 14;
 
 function readJson(filePath, fallback) {
   try {
@@ -262,10 +264,20 @@ function isPublicFreeInventoryRecommendation(creator) {
   return PUBLIC_FREE_INVENTORY_RECOMMENDATIONS.has(creator.recommendation);
 }
 
+function isCplCampaignCreator(creator) {
+  const commissionType = String(creator.commissionType || "").trim().toLowerCase();
+  const monetizationBucket = String(creator.monetizationBucket || "").trim().toLowerCase();
+
+  return commissionType === "cpl" || monetizationBucket === "cpl";
+}
+
 export function getPublicEligibilityDetails(creator) {
   const isPremiumOnly = isPremiumOnlyCreator(creator);
   const publicAccessEvidence = hasFreeAccessEvidence(creator) || isPublicFreeInventoryRecommendation(creator);
 
+  if (isCplCampaignCreator(creator)) {
+    return { isPremiumOnly, publicEligible: false, hiddenReason: "cpl_campaign" };
+  }
   if (creator.manualCuration?.forceExclude || creator.forceExcluded) {
     return { isPremiumOnly, publicEligible: false, hiddenReason: "force_excluded" };
   }
@@ -337,6 +349,47 @@ function creatorKey(creator) {
 
 function shouldIncludeCreator(creator) {
   return isPublicFreeOnlyFanzCreator(creator);
+}
+
+function getCreatorDateMs(creator, fields = ["dateCreate", "dateUpdate"]) {
+  for (const field of fields) {
+    const value = creator?.[field];
+    if (value === null || value === undefined || value === "") {
+      continue;
+    }
+
+    if (typeof value === "number" || /^\d+(\.\d+)?$/.test(String(value).trim())) {
+      const numericValue = Number(value);
+      const timestamp = numericValue > 9999999999 ? numericValue : numericValue * 1000;
+      if (Number.isFinite(timestamp)) {
+        return timestamp;
+      }
+    }
+
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return 0;
+}
+
+function recentCreatorSort(a, b) {
+  return getCreatorDateMs(b) - getCreatorDateMs(a) || creatorSort(a, b);
+}
+
+function isRecentlyAddedCreator(creator) {
+  if (["feature_new_inventory", "test_new_inventory", "new_cpl_candidate"].includes(creator.recommendation)) {
+    return true;
+  }
+
+  const dateCreateMs = getCreatorDateMs(creator, ["dateCreate"]);
+  if (!dateCreateMs) {
+    return false;
+  }
+
+  return Date.now() - dateCreateMs <= RECENT_CREATOR_DAYS * 24 * 60 * 60 * 1000;
 }
 
 function creatorSort(a, b) {
@@ -672,6 +725,34 @@ export function getOutboundCtaText(creator = null) {
   return "Open Free Page";
 }
 
+export function getCreatorFallbackBio(creator) {
+  if (creator?.isFreeTrial) {
+    return "Open this creator's current free-trial profile and browse similar picks from FreeOnlyFanz.";
+  }
+
+  if (creator?.isFree || creator?.hasActiveFreePromo) {
+    return "Open this creator's current free profile and browse similar picks from FreeOnlyFanz.";
+  }
+
+  return "Open this creator's current free or free-trial profile and browse similar picks from FreeOnlyFanz.";
+}
+
+export function getCreatorDisplayBio(creator) {
+  const cleanBio = String(creator?.shortBio || "").replace(/\s+/g, " ").trim();
+
+  if (cleanBio.length >= 24) {
+    return {
+      text: cleanBio,
+      usesFallbackBio: false,
+    };
+  }
+
+  return {
+    text: getCreatorFallbackBio(creator),
+    usesFallbackBio: true,
+  };
+}
+
 export function loadCreators() {
   const report = readJson(REPORT_PATH, { creators: [] });
   const rawCreators = readJson(CREATORS_PATH, []);
@@ -707,13 +788,14 @@ export function getHomepageSections() {
       .filter((creator) => recommendations.includes(creator.recommendation))
       .sort(creatorSort)
       .slice(0, limit);
+  const recentCreators = creators.filter(isRecentlyAddedCreator).sort(recentCreatorSort).slice(0, SECTION_LIMITS.recent);
 
   return [
     {
       id: "new-free-creators",
       title: "New Free Profiles",
       kicker: "Fresh free profiles added to the list.",
-      creators: byRecommendation(["feature_new_inventory"], SECTION_LIMITS.feature_new_inventory),
+      creators: recentCreators,
     },
     {
       id: "featured-free-creators",
@@ -803,8 +885,7 @@ export function getCategoryDefinitions() {
       slug: "new",
       title: "New Creator Picks",
       description: "Fresh free profiles recently added to the list.",
-      filter: (creator) =>
-        ["feature_new_inventory", "test_new_inventory", "new_cpl_candidate"].includes(creator.recommendation),
+      filter: isRecentlyAddedCreator,
     },
     {
       slug: "featured",

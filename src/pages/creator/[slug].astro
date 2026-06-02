@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import CreatorCard from "../../components/CreatorCard.astro";
 import {
   getCreatorBadges,
+  getCreatorDisplayBio,
   getOutboundCtaText,
   getGalleryImages,
   getImageUrl,
@@ -22,8 +23,9 @@ const imageUrl = getImageUrl(creator);
 const galleryImages = getGalleryImages(creator, 8);
 const badges = getCreatorBadges(creator);
 const companionSection = getProfileCompanions(creator, 6);
+const displayBio = getCreatorDisplayBio(creator);
 const title = `${creator.displayName} - Free OnlyFans Creator | FreeOnlyFanz`;
-const description = creator.shortBio || `View ${creator.displayName} on FreeOnlyFanz.`;
+const description = displayBio.text || `View ${creator.displayName} on FreeOnlyFanz.`;
 const ctaText = getOutboundCtaText(creator);
 
 const stats = [
@@ -85,7 +87,7 @@ const stats = [
         </div>
       )}
 
-      {creator.shortBio && <p class="bio">{creator.shortBio}</p>}
+      {displayBio.text && <p class="bio">{displayBio.text}</p>}
 
       {stats.length > 0 && (
         <div class="stat-row" aria-label="Creator stats">

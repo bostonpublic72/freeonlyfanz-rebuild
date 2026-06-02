@@ -1,0 +1,68 @@
+---
+import GuideLanding from "../../components/GuideLanding.astro";
+import { getFreeTrialGuideCreators } from "../../lib/guide-pages.mjs";
+
+const creators = getFreeTrialGuideCreators(12);
+const relatedLinks = [
+  {
+    href: "/category/free-trial/",
+    label: "Free Trial Category",
+    description: "Browse the full free-trial shelf.",
+  },
+  {
+    href: "/category/free/",
+    label: "Free Profiles",
+    description: "Compare free and free-trial picks.",
+  },
+  {
+    href: "/creators/",
+    label: "All Creators",
+    description: "Search the public creator list.",
+  },
+  {
+    href: "/categories/",
+    label: "Categories",
+    description: "Compare every public category.",
+  },
+];
+const faqs = [
+  {
+    question: "What is a free-trial creator page?",
+    answer:
+      "A free-trial creator page gives temporary free access or a free-to-follow path before optional paid features may appear on the external page.",
+  },
+  {
+    question: "Is a free trial the same as a permanently free page?",
+    answer:
+      "Not always. A trial can expire, renew, or change outside FreeOnlyFanz, so read the external page carefully before continuing.",
+  },
+  {
+    question: "Are all links completely free?",
+    answer:
+      "No. We prioritize free-trial access, but creator pages may still include paid content, tips, paid messages, or later subscription terms.",
+  },
+  {
+    question: "Why do some creators appear in more than one category?",
+    answer:
+      "Some creators are both free-trial picks and featured or new picks, so category overlap is normal.",
+  },
+];
+---
+
+<GuideLanding
+  title="Free Trial Creator Pages | FreeOnlyFanz"
+  description="Find free-trial creator pages and free-to-follow profiles from the current FreeOnlyFanz list."
+  canonicalPath="/free-trial-onlyfans/"
+  h1="Free Trial Creator Picks"
+  intro="Free-trial creator pages let you preview a creator before deciding whether the external page is worth more time."
+  explanationTitle="How Free-Trial Creator Pages Work"
+  paragraphs={[
+    "A free-trial page usually gives temporary access or a promotional free path. The details can change on the external creator page, so FreeOnlyFanz keeps the page focused on discovery, not guarantees.",
+    "The creator cards below are selected from public eligible free-trial creators only. Open a card to view the internal profile first, then decide whether to continue.",
+  ]}
+  creators={creators}
+  creatorSectionTitle="Free-Trial Picks"
+  creatorSectionKicker="Public eligible creators currently marked as free-trial friendly."
+  relatedLinks={relatedLinks}
+  faqs={faqs}
+/>

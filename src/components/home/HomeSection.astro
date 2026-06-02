@@ -1,9 +1,26 @@
 ---
 import CreatorCard from "../CreatorCard.astro";
 
-const { id, anchorId, title, creators = [], kicker = "", viewHref = "", variant = "" } = Astro.props;
+const {
+  id,
+  anchorId,
+  title,
+  creators = [],
+  kicker = "",
+  viewHref = "",
+  variant = "",
+  displayLimit = creators.length,
+  randomize = false,
+} = Astro.props;
 const sectionDomId = anchorId || id;
 const sectionClass = ["section", "home-section", variant ? `is-${variant}` : ""].filter(Boolean).join(" ");
+const visibleLimit = Math.min(Math.max(Number(displayLimit) || creators.length, 1), creators.length);
+const randomGridAttrs = randomize
+  ? {
+      "data-random-creator-grid": "",
+      "data-random-limit": String(visibleLimit),
+    }
+  : {};
 ---
 
 {creators.length > 0 && (
@@ -16,8 +33,8 @@ const sectionClass = ["section", "home-section", variant ? `is-${variant}` : ""]
         </div>
         {viewHref && <a class="section-link" href={viewHref}>View all</a>}
       </div>
-      <div class="creator-grid">
-        {creators.map((creator) => <CreatorCard creator={creator} />)}
+      <div class="creator-grid" {...randomGridAttrs}>
+        {creators.map((creator, index) => <CreatorCard creator={creator} hidden={randomize && index >= visibleLimit} />)}
       </div>
     </div>
   </section>
