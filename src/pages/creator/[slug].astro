@@ -24,8 +24,9 @@ const galleryImages = getGalleryImages(creator, 8);
 const badges = getCreatorBadges(creator);
 const companionSection = getProfileCompanions(creator, 6);
 const displayBio = getCreatorDisplayBio(creator);
-const title = `${creator.displayName} - Free OnlyFans Creator | FreeOnlyFanz`;
-const description = displayBio.text || `View ${creator.displayName} on FreeOnlyFanz.`;
+const isTrial = creator.isFreeTrial || creator.hasActiveFreePromo;
+const title = `${creator.displayName} (@${creator.username}) — ${isTrial ? "Free Trial" : "Free"} on FreeOnlyFanz`;
+const description = displayBio.text || `Open ${creator.displayName}'s current ${isTrial ? "free-trial" : "free"} profile on FreeOnlyFanz.`;
 const ctaText = getOutboundCtaText(creator);
 
 const stats = [

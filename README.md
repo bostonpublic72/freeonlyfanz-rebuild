@@ -108,3 +108,30 @@ FreeOnlyFanz SEO traffic should be evaluated separately and should generally fav
 TwerkQueens popunder/nav-tab traffic is colder and should also be evaluated separately, usually favoring low-friction free-trial offers.
 
 CPL commission campaigns are excluded from the public FreeOnlyFanz directory in `src/lib/creators.mjs`.
+
+## Monthly SEO guides
+
+Publish one new niche guide per month for search traffic and outreach backlinks.
+
+Guides live in `data/monthly-guides.json`. Each entry needs:
+
+- `slug` — URL path becomes `/guides/{slug}/`
+- `status` — `published` or `draft` (only published guides are built)
+- SEO fields — `title`, `description`, `h1`, `intro`, `paragraphs`, `faqs`
+- Inventory filters — `tags`, optional `requireFreeOrTrial`, `creatorLimit`
+
+### Publish a new guide
+
+1. Copy a `draft` entry in `data/monthly-guides.json` or add a new one.
+2. Set `status` to `published` and fill in copy + tags that match your inventory.
+3. Run `npm run build` and upload `dist/` to cPanel.
+4. Link to the new guide from outreach, Reddit replies, and social posts.
+5. Resubmit `sitemap.xml` in Google Search Console.
+
+Check which tags have enough inventory:
+
+```bash
+node -e "const c=require('./data/creators.json'); const t={}; c.forEach(x=>(x.tags||[]).forEach(tag=>{const k=String(tag).toLowerCase(); t[k]=(t[k]||0)+1})); console.log(Object.entries(t).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([k,v])=>v+' '+k).join('\n'))"
+```
+
+Published guides also appear on `/guides/` and in the sitemap automatically.

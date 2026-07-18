@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 /* Replace contact email below if contact@freeonlyfanz.com is not your real inbox. */
 const CONTACT_EMAIL = "contact@freeonlyfanz.com";
@@ -7,7 +8,7 @@ const CONTACT_EMAIL = "contact@freeonlyfanz.com";
 
 <BaseLayout
   title="Contact | FreeOnlyFanz"
-  description="Contact FreeOnlyFanz for general questions. Content removal requests belong on the DMCA page."
+  description={metaDescriptions.contact}
   canonicalPath="/contact/"
 >
   <article class="info-page container">

@@ -2,19 +2,18 @@
 import TqCreatorCard from "../components/TqCreatorCard.astro";
 import "../styles/global.css";
 import { GA_ID, SITE_NAME, absoluteUrl } from "../lib/site.mjs";
+import { metaDescriptions } from "../lib/site-copy.mjs";
 import { getTqCreatorRows } from "../lib/creators.mjs";
 
 const tqMainLimit = 12;
 const tqMoreLimit = 24;
-const { poolCreators } = getTqCreatorRows({
+const { mainCreators, moreCreators } = getTqCreatorRows({
   mainLimit: tqMainLimit,
   moreLimit: tqMoreLimit,
   poolLimit: 60,
 });
-const mainCreators = poolCreators;
-const moreCreators = poolCreators;
-const title = "Pick a Free Profile | FreeOnlyFanz";
-const description = "Free and free-trial creator pages worth opening first.";
+const title = "Free Profiles — Open Now | FreeOnlyFanz";
+const description = metaDescriptions.tq;
 const canonicalUrl = absoluteUrl("/tq/");
 const heartPath =
   "M24 41S6 30.8 6 16.8C6 10 10.8 6 16.3 6c3.3 0 6.1 1.5 7.7 4.1C25.6 7.5 28.4 6 31.7 6 37.2 6 42 10 42 16.8 42 30.8 24 41 24 41Z";
@@ -50,97 +49,56 @@ const heartPath =
   </head>
   <body class="tq-page-body">
     <div class="site-shell tq-shell">
-      <header class="tq-header">
-        <nav class="container tq-nav" aria-label="TwerkQueens landing navigation">
-          <a class="brand" href="/">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 48 48" role="img">
-                <path
-                  d={heartPath}
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <span class="brand-name">FreeOnly<span>Fanz</span></span>
-          </a>
-          <a class="nav-cta tq-nav-cta" href="/category/free/">Browse All Picks</a>
+      <header class="tq-header tq-header-minimal">
+        <nav class="container tq-nav" aria-label="Landing navigation">
+          <span class="tq-nav-badge">18+ Free Picks</span>
+          <span class="tq-nav-note">Tap a photo to open</span>
         </nav>
       </header>
 
       <main>
-        <section class="tq-hero" aria-labelledby="tq-hero-title">
-          <div class="container tq-hero-inner">
-            <p class="tq-eyebrow">Fast picks from FreeOnlyFanz</p>
-            <h1 id="tq-hero-title">Pick a Free Profile</h1>
-            <p>Free and free-trial creator pages worth opening first.</p>
-            <div class="tq-chip-row" aria-label="Landing page filters">
-              <span>Free</span>
+        <section class="tq-hero tq-hero-pop" aria-labelledby="tq-hero-title">
+          <div class="container tq-hero-inner tq-hero-inner-pop">
+            <p class="tq-eyebrow">Updated hourly</p>
+            <h1 id="tq-hero-title">Hand-picked free &amp; trial girls</h1>
+            <p class="tq-hero-lede">Only profiles with active free or free-trial access right now. Skip the paywall.</p>
+            <div class="tq-chip-row" aria-label="Offer types">
               <span>Free Trial</span>
+              <span>Free</span>
               <span>New</span>
-              <span>Popular</span>
+              <span>18+ Only</span>
             </div>
           </div>
         </section>
 
-        <section class="tq-trust-strip" aria-label="Disclosure">
-          <div class="container tq-trust-grid">
-            <span>18+ only</span>
-            <span>Free and free-trial pages</span>
-            <span>Some links may be sponsored</span>
-          </div>
-        </section>
-
-        <section class="section tq-section" id="start-here">
+        <section class="section tq-section tq-section-tight" id="start-here">
           <div class="container">
-            <div class="section-header">
+            <div class="section-header tq-section-header-compact">
               <div class="section-copy">
-                <h2>Start Here</h2>
-                <p class="section-kicker">Top free picks for quick browsing.</p>
+                <h2>Free Trial Picks</h2>
+                <p class="section-kicker">Free-trial girls first — higher chance they convert later.</p>
               </div>
             </div>
-            <div
-              class="creator-grid tq-grid"
-              data-random-creator-grid
-              data-random-group="tq-landing-picks"
-              data-random-limit={tqMainLimit}
-              data-random-offset="0"
-            >
+            <div class="creator-grid tq-grid tq-grid-pop">
               {mainCreators.map((creator, index) => (
-                <TqCreatorCard
-                  creator={creator}
-                  priority={index < 4 ? "primary" : "secondary"}
-                  hidden={index >= tqMainLimit}
-                />
+                <TqCreatorCard creator={creator} priority={index < 6 ? "primary" : "secondary"} />
               ))}
             </div>
           </div>
         </section>
 
-        {moreCreators.length > tqMainLimit && (
+        {moreCreators.length > 0 && (
           <section class="section tq-section" id="more-free-profiles">
             <div class="container">
-              <div class="section-header">
+              <div class="section-header tq-section-header-compact">
                 <div class="section-copy">
-                  <h2>More Free Profiles</h2>
-                  <p class="section-kicker">More creator pages to open next.</p>
+                  <h2>More Free Picks</h2>
+                  <p class="section-kicker">More curated free and trial profiles worth checking.</p>
                 </div>
               </div>
-              <div
-                class="creator-grid tq-grid tq-more-grid"
-                data-random-creator-grid
-                data-random-group="tq-landing-picks"
-                data-random-limit={tqMoreLimit}
-                data-random-offset={tqMainLimit}
-              >
-                {moreCreators.map((creator, index) => (
-                  <TqCreatorCard
-                    creator={creator}
-                    hidden={index < tqMainLimit || index >= tqMainLimit + tqMoreLimit}
-                  />
+              <div class="creator-grid tq-grid tq-grid-pop tq-more-grid">
+                {moreCreators.map((creator) => (
+                  <TqCreatorCard creator={creator} />
                 ))}
               </div>
             </div>
@@ -148,82 +106,14 @@ const heartPath =
         )}
       </main>
 
-      <footer class="tq-footer">
+      <footer class="tq-footer tq-footer-minimal">
         <div class="container tq-footer-inner">
-          <a class="brand footer-brand" href="/">
-            <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 48 48" role="img">
-                <path
-                  d={heartPath}
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-            <span class="brand-name">FreeOnly<span>Fanz</span></span>
-          </a>
-          <p>18+ only. Some links may be sponsored.</p>
-          <p>FreeOnlyFanz is an independent curated directory and is not affiliated with OnlyFans.</p>
+          <p>18+ only · Curated free &amp; trial picks · Some links sponsored · Not affiliated with OnlyFans.</p>
         </div>
       </footer>
     </div>
 
     <script is:inline>
-      (function () {
-        function shuffle(items) {
-          for (var index = items.length - 1; index > 0; index -= 1) {
-            var swapIndex = Math.floor(Math.random() * (index + 1));
-            var current = items[index];
-            items[index] = items[swapIndex];
-            items[swapIndex] = current;
-          }
-          return items;
-        }
-
-        var gridsByGroup = {};
-
-        document.querySelectorAll("[data-random-creator-grid]").forEach(function (grid, index) {
-          var group = grid.dataset.randomGroup || "random-grid-" + index;
-          gridsByGroup[group] = gridsByGroup[group] || [];
-          gridsByGroup[group].push(grid);
-        });
-
-        Object.keys(gridsByGroup).forEach(function (group) {
-          var grids = gridsByGroup[group];
-          var slugs = shuffle(
-            Array.from(grids[0].children)
-              .map(function (item) {
-                return item.dataset.creatorSlug || "";
-              })
-              .filter(Boolean)
-          );
-
-          grids.forEach(function (grid) {
-            var limit = parseInt(grid.dataset.randomLimit || slugs.length, 10);
-            var offset = parseInt(grid.dataset.randomOffset || "0", 10);
-            var selected = new Set(slugs.slice(offset, offset + limit));
-            var itemsBySlug = new Map();
-            var fragment = document.createDocumentFragment();
-
-            Array.from(grid.children).forEach(function (item) {
-              itemsBySlug.set(item.dataset.creatorSlug || "", item);
-            });
-
-            slugs.forEach(function (slug) {
-              var item = itemsBySlug.get(slug);
-              if (!item) return;
-              item.hidden = !selected.has(slug);
-              fragment.appendChild(item);
-            });
-
-            grid.appendChild(fragment);
-          });
-        });
-      })();
-
       window.trackTqOutbound = function trackTqOutbound(params) {
         if (typeof window.gtag !== "function") return;
         window.gtag("event", "tq_outbound_click", params || {});

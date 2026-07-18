@@ -1,0 +1,30 @@
+---
+import GuideLanding from "../../components/GuideLanding.astro";
+import { getMonthlyGuideCreators, getPublishedMonthlyGuides } from "../../lib/monthly-guides.mjs";
+
+export function getStaticPaths() {
+  return getPublishedMonthlyGuides().map((guide) => ({
+    params: { slug: guide.slug },
+    props: { guide },
+  }));
+}
+
+const { guide } = Astro.props;
+const creators = getMonthlyGuideCreators(guide);
+---
+
+<GuideLanding
+  title={guide.title}
+  description={guide.description}
+  canonicalPath={`/guides/${guide.slug}/`}
+  eyebrow="Monthly Guide"
+  h1={guide.h1}
+  intro={guide.intro}
+  explanationTitle={guide.explanationTitle}
+  paragraphs={guide.paragraphs || []}
+  creators={creators}
+  creatorSectionTitle={guide.creatorSectionTitle}
+  creatorSectionKicker={guide.creatorSectionKicker}
+  relatedLinks={guide.relatedLinks || []}
+  faqs={guide.faqs || []}
+/>

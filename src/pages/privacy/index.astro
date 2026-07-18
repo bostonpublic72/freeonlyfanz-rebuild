@@ -1,10 +1,11 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 ---
 
 <BaseLayout
   title="Privacy Policy | FreeOnlyFanz"
-  description="Privacy policy for FreeOnlyFanz: what we collect, cookies, and outbound links."
+  description={metaDescriptions.privacy}
   canonicalPath="/privacy/"
 >
   <article class="info-page container">

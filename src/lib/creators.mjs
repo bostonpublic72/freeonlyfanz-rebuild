@@ -1,11 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import slugify from "slugify";
+import { categoryCopy } from "./site-copy.mjs";
 
 const ROOT = process.cwd();
 const REPORT_PATH = path.join(ROOT, "data", "reports", "offer-analysis.json");
 const CREATORS_PATH = path.join(ROOT, "data", "creators.json");
 const MANUAL_CURATION_PATH = path.join(ROOT, "data", "manual-curation.json");
+const CREATOR_FOLDER_SNAPSHOT_PATH = path.join(ROOT, "data", "creator-folder-snapshot.json");
 
 const TQ_UTM_PARAMS = {
   utm_source: "twerkqueens",
@@ -42,6 +44,8 @@ const SECTION_LIMITS = {
   popular: 6,
 };
 
+const FEATURED_RECOMMENDATIONS = ["feature_new_inventory", "feature_now", "feature_revshare"];
+
 const RECENT_CREATOR_DAYS = 14;
 
 function readJson(filePath, fallback) {
@@ -57,6 +61,79 @@ function readJson(filePath, fallback) {
 
 function readManualCurationRaw() {
   return readJson(MANUAL_CURATION_PATH, {});
+}
+
+function addCreatorSlugVariants(slugs, value) {
+  const username = normalizeUsername(value);
+  const slug = makeCreatorSlug(username || value);
+  if (username) {
+    slugs.add(username);
+  }
+  if (slug) {
+    slugs.add(slug);
+  }
+}
+
+function getManualBlockedSlugSet() {
+  const manual = readManualCurationRaw();
+  const slugs = new Set();
+
+  for (const value of manual.forceExclude || []) {
+    addCreatorSlugVariants(slugs, value);
+  }
+
+  return slugs;
+}
+
+export function getImportedCreatorSlugSet() {
+  const slugs = new Set();
+  const rawCreators = readJson(CREATORS_PATH, []);
+  const report = readJson(REPORT_PATH, { creators: [] });
+
+  for (const creator of [...rawCreators, ...(report.creators || [])]) {
+    addCreatorSlugVariants(slugs, creator.slug || creator.username || creator.onlyfansUrl || "");
+  }
+
+  return slugs;
+}
+
+export function getSnapshotCreatorSlugSet() {
+  const snapshot = readJson(CREATOR_FOLDER_SNAPSHOT_PATH, { slugs: [] });
+  return new Set((snapshot.slugs || []).map((slug) => String(slug).trim()).filter(Boolean));
+}
+
+export function getPublicCreatorSlugSet() {
+  return new Set(loadCreators().map((creator) => creator.slug).filter(Boolean));
+}
+
+export function getOrphanCreatorSlugs() {
+  const publicSlugs = getPublicCreatorSlugSet();
+  const candidates = new Set([
+    ...getImportedCreatorSlugSet(),
+    ...getSnapshotCreatorSlugSet(),
+    ...getManualBlockedSlugSet(),
+  ]);
+
+  return [...candidates]
+    .filter((slug) => slug && !slug.includes("@") && !publicSlugs.has(slug))
+    .sort();
+}
+
+function isBlockedCreator(creator) {
+  const manualBlocked = getManualBlockedSlugSet();
+  const username = normalizeUsername(creator.username || creator.onlyfansUrl || "");
+  const slug = makeCreatorSlug(creator.slug || creator.username || creator.onlyfansUrl || "");
+
+  return Boolean(
+    (username && manualBlocked.has(username)) ||
+      (slug && manualBlocked.has(slug)) ||
+      creator.manualCuration?.forceExclude ||
+      creator.forceExcluded
+  );
+}
+
+export function getBlockedCreatorSlugs() {
+  return getOrphanCreatorSlugs();
 }
 
 export function normalizeUsername(value) {
@@ -201,7 +278,9 @@ function hasAgeCodedPublicName(creator) {
     .replace(/[_\s.-]+/g, "")
     .toLowerCase();
 
-  return /teen|schoolgirl|schoolboy|barelylegal|underage|jailbait|loli|little|lilcutie|baby/.test(publicText);
+  // Only block explicit high-risk age-coded terms in public names/usernames.
+  // Words like "baby" or "little" in real display names are allowed.
+  return /teen|schoolgirl|schoolboy|barelylegal|underage|jailbait|loli/.test(publicText);
 }
 
 function isKnownValue(value) {
@@ -278,13 +357,13 @@ export function getPublicEligibilityDetails(creator) {
   if (isCplCampaignCreator(creator)) {
     return { isPremiumOnly, publicEligible: false, hiddenReason: "cpl_campaign" };
   }
-  if (creator.manualCuration?.forceExclude || creator.forceExcluded) {
+  if (isBlockedCreator(creator)) {
     return { isPremiumOnly, publicEligible: false, hiddenReason: "force_excluded" };
   }
   if (creator.duplicateBestCandidate === false) {
     return { isPremiumOnly, publicEligible: false, hiddenReason: "duplicate_slug_loser" };
   }
-  if (!isCreatorActive(creator) || creator.recommendation === "exclude_for_now") {
+  if (!isCreatorActive(creator)) {
     return { isPremiumOnly, publicEligible: false, hiddenReason: "inactive_campaign" };
   }
   if (!creator.slug) {
@@ -664,9 +743,33 @@ export function getTqCreatorRows({ seed = getTqRotationSeed(), mainLimit = 12, m
     tqWeightReason: row.reason,
     tqTrackingUrl: appendTqTrackingParams(row.creator.trackingUrl),
   }));
-  const poolCreators = weightedShuffle(weightedCreators, seed).slice(0, Math.min(poolLimit, weightedCreators.length));
-  const mainCreators = poolCreators.slice(0, Math.min(mainLimit, poolCreators.length));
-  const moreCreators = poolCreators.slice(mainCreators.length, mainCreators.length + moreLimit);
+
+  // Separate free-trial girls from pure free girls for Direction 1 positioning
+  const freeTrialCreators = weightedCreators.filter(
+    (c) => c.isFreeTrial || c.hasActiveFreePromo
+  );
+  const freeOnlyCreators = weightedCreators.filter(
+    (c) => !c.isFreeTrial && !c.hasActiveFreePromo
+  );
+
+  // Shuffle within each group so rotation still feels fresh
+  const shuffledFreeTrial = weightedShuffle(freeTrialCreators, seed);
+  const shuffledFreeOnly = weightedShuffle(freeOnlyCreators, seed + "_free");
+
+  // Build main section: free-trial girls first, then fill with free girls
+  const mainTrialCount = Math.min(Math.ceil(mainLimit * 0.7), shuffledFreeTrial.length);
+  const mainFreeCount = Math.min(mainLimit - mainTrialCount, shuffledFreeOnly.length);
+
+  const mainCreators = [
+    ...shuffledFreeTrial.slice(0, mainTrialCount),
+    ...shuffledFreeOnly.slice(0, mainFreeCount),
+  ].slice(0, mainLimit);
+
+  // Remaining pool for "More Free Picks" (mixed, already rotated)
+  const usedSlugs = new Set(mainCreators.map((c) => c.slug));
+  const remainingPool = weightedCreators.filter((c) => !usedSlugs.has(c.slug));
+  const moreCreators = remainingPool.slice(0, moreLimit);
+
   const sectionBySlug = new Map([
     ...mainCreators.map((creator) => [creator.slug, "Start Here"]),
     ...moreCreators.map((creator) => [creator.slug, "More Free Profiles"]),
@@ -682,7 +785,7 @@ export function getTqCreatorRows({ seed = getTqRotationSeed(), mainLimit = 12, m
     seed,
     rows,
     eligibleRows,
-    poolCreators,
+    poolCreators: weightedCreators,
     mainCreators,
     moreCreators,
   };
@@ -711,6 +814,18 @@ export function getCreatorBadges(creator) {
   }
 
   return uniqueStrings(badges).slice(0, 3);
+}
+
+export function getTqCardCtaText(creator) {
+  if (creator?.isFreeTrial || creator?.hasActiveFreePromo) {
+    return "Start Free Trial";
+  }
+
+  if (creator?.isFree) {
+    return "Open Free";
+  }
+
+  return "Open Free Page";
 }
 
 export function getCardCtaText() {
@@ -801,7 +916,7 @@ export function getHomepageSections() {
       id: "featured-free-creators",
       title: "Featured Creator Picks",
       kicker: "Creator pages worth opening first.",
-      creators: byRecommendation(["feature_now", "feature_revshare"], SECTION_LIMITS.featured),
+      creators: byRecommendation(FEATURED_RECOMMENDATIONS, SECTION_LIMITS.featured),
     },
     {
       id: "free-trial-creators",
@@ -871,27 +986,27 @@ export function getCategoryDefinitions() {
   return [
     {
       slug: "free",
-      title: "Free Profiles",
-      description: "Free creator pages and free-trial profiles in one place.",
+      title: categoryCopy.free.title,
+      description: categoryCopy.free.description,
       filter: (creator) => creator.isFree || creator.isFreeTrial || creator.hasActiveFreePromo,
     },
     {
       slug: "free-trial",
-      title: "Free Trial Picks",
-      description: "Profiles with free-trial or free-to-follow access.",
+      title: categoryCopy["free-trial"].title,
+      description: categoryCopy["free-trial"].description,
       filter: (creator) => creator.recommendation === "test_revshare_free_trial" || creator.isFreeTrial,
     },
     {
       slug: "new",
-      title: "New Creator Picks",
-      description: "Fresh free profiles recently added to the list.",
+      title: categoryCopy.new.title,
+      description: categoryCopy.new.description,
       filter: isRecentlyAddedCreator,
     },
     {
       slug: "featured",
-      title: "Featured Creator Picks",
-      description: "Standout creator pages worth opening first.",
-      filter: (creator) => ["feature_new_inventory", "feature_now", "feature_revshare"].includes(creator.recommendation),
+      title: categoryCopy.featured.title,
+      description: categoryCopy.featured.description,
+      filter: (creator) => FEATURED_RECOMMENDATIONS.includes(creator.recommendation),
     },
   ];
 }

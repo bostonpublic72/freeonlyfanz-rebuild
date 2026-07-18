@@ -1,10 +1,11 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 ---
 
 <BaseLayout
   title="FAQ | FreeOnlyFanz"
-  description="Common questions about FreeOnlyFanz, curated picks, and outbound links."
+  description={metaDescriptions.faq}
   canonicalPath="/faq/"
 >
   <article class="info-page container">
@@ -20,7 +21,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <p>No. We list links and short browsing context. Content lives on third-party pages when you click through.</p>
 
       <h2>Why do picks change?</h2>
-      <p>We rotate shelves and categories over time. Nothing here is a promise that a specific page stays listed forever.</p>
+      <p>Creators join, leave, and change their offers over time. We refresh the directory regularly, so a profile you saw last month may not be listed today.</p>
+
+      <h2>Why is a creator missing?</h2>
+      <p>
+        A profile may disappear if the creator is no longer listed, changed to a paid-only offer, or no longer fits the
+        section you are browsing. It does not always mean the creator deleted their account.
+      </p>
 
       <h2>Are links sponsored?</h2>
       <p>Some may be. Sponsored or affiliate links may earn us a commission. We still aim to keep the directory useful, not

@@ -1,10 +1,11 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 ---
 
 <BaseLayout
   title="About | FreeOnlyFanz"
-  description="FreeOnlyFanz is an independent 18+ directory of curated creator picks. Learn who we are and what we do."
+  description={metaDescriptions.about}
   canonicalPath="/about/"
 >
   <article class="info-page container">

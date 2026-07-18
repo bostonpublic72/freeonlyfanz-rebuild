@@ -1,68 +1,66 @@
 ---
 import GuideLanding from "../../components/GuideLanding.astro";
 import { getBestFreeGuideCreators } from "../../lib/guide-pages.mjs";
+import { guideFaqs, guideKickers } from "../../lib/guide-public-copy.mjs";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 const creators = getBestFreeGuideCreators(12);
 const relatedLinks = [
   {
-    href: "/category/featured/",
-    label: "Featured Picks",
-    description: "See the featured creator category.",
+    href: "/guides/free-latina-onlyfans-creators/",
+    label: "Latina Creator Guide",
+    description: "Free and free-trial Latina picks.",
   },
   {
-    href: "/category/free/",
-    label: "Free Profiles",
-    description: "Browse free and free-trial profiles.",
+    href: "/guides/free-petite-onlyfans-creators/",
+    label: "Petite Creator Guide",
+    description: "Petite free and free-trial picks.",
+  },
+  {
+    href: "/free-trial-onlyfans/",
+    label: "Free Trial Picks",
+    description: "Current free-trial creator pages.",
   },
   {
     href: "/creators/",
     label: "All Creators",
-    description: "Search the full public list.",
-  },
-  {
-    href: "/categories/",
-    label: "Categories",
-    description: "Browse all public shelves.",
+    description: "Search the full directory.",
   },
 ];
 const faqs = [
   {
     question: "How are best free creator picks chosen?",
-    answer:
-      "This page uses the current public FreeOnlyFanz list and sorts free or free-trial creators by site priority and score.",
+    answer: guideFaqs.howBestPicksChosen,
   },
   {
     question: "Are these creators official or verified?",
-    answer:
-      "No. FreeOnlyFanz is an independent directory and does not claim official or verified status for creator pages.",
+    answer: guideFaqs.notOfficial,
   },
   {
     question: "Are all links completely free?",
-    answer:
-      "No. The listed creators have free or free-trial access signals, but external creator pages may include paid content after you open them.",
+    answer: guideFaqs.completelyFree,
   },
   {
     question: "Why do some creators appear in more than one category?",
-    answer:
-      "Categories can overlap when a creator is free, trial-friendly, featured, or newly added at the same time.",
+    answer: guideFaqs.categoryOverlap,
   },
 ];
 ---
 
 <GuideLanding
-  title="Best Free Creator Picks | FreeOnlyFanz"
-  description="Explore featured free creator picks from the current FreeOnlyFanz creator list."
+  title="Best Free OnlyFans Creators Right Now | FreeOnlyFanz"
+  description={metaDescriptions.bestFree}
   canonicalPath="/best-free-onlyfans-creators/"
-  h1="Best Free Creator Picks"
-  intro="A focused landing page for higher-priority free and free-trial creator picks from the current FreeOnlyFanz list."
-  explanationTitle="Featured Free Picks In One Place"
+  h1="Best Free OnlyFans Creators Right Now"
+  intro="Hand-picked free and free-trial creators worth opening first — skip the spam lists."
+  explanationTitle="Why These Free Picks"
   paragraphs={[
-    "This page is designed for quick comparison. It highlights public eligible creator pages with free or free-trial access signals, then sorts them by priority and score.",
-    "Use the cards as a starting point, not a promise about what is available after you leave FreeOnlyFanz. External creator pages can change and may include paid content.",
+    "Looking for the best free OnlyFans creators usually means scrolling dead links. This page is a short, current starting list of free and free-trial profiles from FreeOnlyFanz.",
+    "Open a card to preview her profile here first, then decide whether to visit her page. Offers can change, and paid content may still appear after you click through.",
   ]}
   creators={creators}
   creatorSectionTitle="Featured Free Creator Cards"
-  creatorSectionKicker="Sorted by homepage priority, then score."
+  creatorSectionKicker={guideKickers.sortedPicks}
   relatedLinks={relatedLinks}
   faqs={faqs}
 />

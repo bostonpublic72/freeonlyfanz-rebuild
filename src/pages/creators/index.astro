@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import CreatorCard from "../../components/CreatorCard.astro";
 import { loadCreators, normalizeUsername } from "../../lib/creators.mjs";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 /** Public list from loadCreators is already de-duped, sorted, and excludes hidden rows. */
 const creators = loadCreators().filter((creator) => {
@@ -13,23 +14,25 @@ const creators = loadCreators().filter((creator) => {
 
 const totalCount = creators.length;
 const relatedLinks = [
+  { href: "/guides/free-latina-onlyfans-creators/", label: "Latina Guide" },
+  { href: "/guides/free-petite-onlyfans-creators/", label: "Petite Guide" },
+  { href: "/guides/free-asian-onlyfans-creators/", label: "Asian Guide" },
+  { href: "/guides/free-trial-onlyfans-accounts-2026/", label: "Free Trial 2026" },
   { href: "/free-onlyfans/", label: "Free Creator Pages" },
-  { href: "/free-trial-onlyfans/", label: "Free Trial Picks" },
   { href: "/best-free-onlyfans-creators/", label: "Best Free Picks" },
-  { href: "/categories/", label: "Categories" },
 ];
 ---
 
 <BaseLayout
   title="Browse All Creators | FreeOnlyFanz"
-  description="Explore the current FreeOnlyFanz creator list, including free and free-trial profiles."
+  description={metaDescriptions.creators}
   canonicalPath="/creators/"
 >
   <section class="container category-intro browse-all-intro">
     <p class="eyebrow">Directory</p>
     <h1>Browse All Creators</h1>
     <p class="browse-all-sub">
-      Explore the current FreeOnlyFanz creator list, including free and free-trial profiles.
+      Search every creator listed on FreeOnlyFanz — free pages, free trials, and featured picks.
     </p>
     <div class="category-links browse-related-links" aria-label="Related creator guides">
       {relatedLinks.map((link) => <a class="pill-link" href={link.href}>{link.label}</a>)}

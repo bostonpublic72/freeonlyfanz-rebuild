@@ -1,0 +1,66 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedMonthlyGuides } from "../../lib/monthly-guides.mjs";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
+
+const guides = getPublishedMonthlyGuides();
+const evergreenLinks = [
+  { href: "/free-onlyfans/", label: "Free Creator Pages" },
+  { href: "/free-trial-onlyfans/", label: "Free Trial Picks" },
+  { href: "/best-free-onlyfans-creators/", label: "Best Free Picks" },
+  { href: "/free-onlyfans-accounts/", label: "Free Creator Accounts" },
+  { href: "/onlyfans-free-vs-paid/", label: "Free vs Paid" },
+];
+---
+
+<BaseLayout
+  title="Monthly Creator Guides | FreeOnlyFanz"
+  description={metaDescriptions.guides}
+  canonicalPath="/guides/"
+>
+  <section class="guide-hero">
+    <div class="container guide-hero-inner">
+      <p class="eyebrow">FreeOnlyFanz Guides</p>
+      <h1>Monthly Creator Guides</h1>
+      <p>
+        Niche guides for free and free-trial creators — Asian, Latina, petite, GFE, free trials, and more.
+        All pulled from the current FreeOnlyFanz directory.
+      </p>
+    </div>
+  </section>
+
+  <section class="guide-section">
+    <div class="container guide-copy">
+      <h2>Published Guides</h2>
+      {guides.length > 0 ? (
+        <div class="guide-related-grid">
+          {guides.map((guide) => (
+            <a class="guide-related-link" href={`/guides/${guide.slug}/`}>
+              <span>{guide.h1}</span>
+              <small>{guide.intro}</small>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p>No monthly guides are published yet.</p>
+      )}
+    </div>
+  </section>
+
+  <section class="guide-section guide-related-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-copy">
+          <h2>Evergreen Guides</h2>
+        </div>
+      </div>
+      <div class="guide-related-grid">
+        {evergreenLinks.map((link) => (
+          <a class="guide-related-link" href={link.href}>
+            <span>{link.label}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

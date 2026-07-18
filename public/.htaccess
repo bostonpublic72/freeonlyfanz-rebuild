@@ -1,0 +1,11 @@
+DirectoryIndex index.html
+
+# Legacy URLs from older site builds → current evergreen guides
+Redirect 301 /top-rated-free-trial-onlyfans /free-trial-onlyfans/
+Redirect 301 /top-rated-free-trial-onlyfans/ /free-trial-onlyfans/
+Redirect 301 /top-rated-free-onlyfans /free-onlyfans/
+Redirect 301 /top-rated-free-onlyfans/ /free-onlyfans/
+Redirect 301 /top-rated-premium-onlyfans /onlyfans-free-vs-paid/
+Redirect 301 /top-rated-premium-onlyfans/ /onlyfans-free-vs-paid/
+Redirect 301 /login /creators/
+Redirect 301 /login/ /creators/

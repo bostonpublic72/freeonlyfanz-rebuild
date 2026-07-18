@@ -1,12 +1,15 @@
 import { absoluteUrl } from "../lib/site.mjs";
 import { getCategoryDefinitions, loadCreators } from "../lib/creators.mjs";
+import { getMonthlyGuideUrls } from "../lib/monthly-guides.mjs";
 
 const GUIDE_URLS = [
+  "/guides/",
   "/free-onlyfans/",
   "/free-trial-onlyfans/",
   "/best-free-onlyfans-creators/",
   "/free-onlyfans-accounts/",
   "/onlyfans-free-vs-paid/",
+  ...getMonthlyGuideUrls(),
 ];
 
 export async function GET() {

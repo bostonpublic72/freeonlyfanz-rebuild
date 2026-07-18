@@ -1,6 +1,8 @@
 ---
 import GuideLanding from "../../components/GuideLanding.astro";
 import { getFreeGuideCreators } from "../../lib/guide-pages.mjs";
+import { guideFaqs, guideKickers } from "../../lib/guide-public-copy.mjs";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 const creators = getFreeGuideCreators(12);
 const relatedLinks = [
@@ -12,52 +14,48 @@ const relatedLinks = [
   {
     href: "/categories/",
     label: "Categories",
-    description: "Browse the public category hub.",
+    description: "Browse the category hub.",
   },
   {
     href: "/creators/",
     label: "All Creators",
-    description: "Search every public creator profile.",
+    description: "Search every creator profile.",
   },
 ];
 const faqs = [
   {
     question: "What is a free creator account?",
-    answer:
-      "It is a creator profile that appears to offer free access or an active free promotion, though the external page can still include optional paid content.",
+    answer: guideFaqs.freePage,
   },
   {
     question: "How is this different from a free-trial account?",
-    answer:
-      "A free-trial page may be temporary or promotional. A free account generally has free-to-follow access when it appears in the FreeOnlyFanz list.",
+    answer: guideFaqs.freeVsTrial,
   },
   {
     question: "Are all links completely free?",
-    answer:
-      "No. FreeOnlyFanz prioritizes free access, but external creator pages may include paid posts, messages, tips, or subscription changes.",
+    answer: guideFaqs.completelyFree,
   },
   {
     question: "Why do some creators appear in more than one category?",
-    answer:
-      "A creator can qualify for multiple public shelves, such as free, new, featured, or free-trial.",
+    answer: guideFaqs.categoryOverlap,
   },
 ];
 ---
 
 <GuideLanding
-  title="Free Creator Accounts | FreeOnlyFanz"
-  description="Find free creator accounts and free-trial profiles without digging through spam."
+  title="Free OnlyFans Accounts (No Junk Lists) | FreeOnlyFanz"
+  description={metaDescriptions.freeAccounts}
   canonicalPath="/free-onlyfans-accounts/"
-  h1="Free Creator Accounts Without Digging Through Junk"
-  intro="FreeOnlyFanz gives you a cleaner route into free creator accounts by showing public profile cards and useful category paths."
+  h1="Free OnlyFans Accounts Without Digging Through Junk"
+  intro="Current free OnlyFans accounts and trial-friendly profiles — curated so you can open real pages fast."
   explanationTitle="A Practical Free Account List"
   paragraphs={[
-    "People searching for free creator accounts usually want a fast list that is not padded with junk. This page keeps the focus on public eligible free-access creators from the current FreeOnlyFanz list.",
-    "Each card links to an internal creator profile, so you can compare names, images, tags, and basic details before opening an external page.",
+    "If you are searching for free OnlyFans accounts, you usually want a list that is actually current. This page focuses on creators listed as free or free-trial on FreeOnlyFanz right now.",
+    "Each card links to a profile page here first, so you can compare names, photos, and tags before opening the creator's own page.",
   ]}
   creators={creators}
   creatorSectionTitle="Free Creator Accounts"
-  creatorSectionKicker="Public eligible free creators, sorted by priority and score."
+  creatorSectionKicker={guideKickers.sortedPicks}
   relatedLinks={relatedLinks}
   faqs={faqs}
 />

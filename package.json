@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node scripts/snapshot-creator-folders.mjs && astro build && node scripts/write-blocked-creator-pages.mjs",
     "preview": "astro preview",
     "import": "npm run import:onlytraffic",
     "import:onlytraffic": "node scripts/import-onlytraffic.js",

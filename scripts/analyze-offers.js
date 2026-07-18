@@ -29,32 +29,13 @@ const MANUAL_OVERRIDES = {
     manualNotes:
       "Known direct social revshare winner. Do not automatically rank for FreeOnlyFanz SEO without testing.",
   },
-  natsunya: {
-    isWarmSocialDirectWinner: true,
-    provenSource: "warm_social_direct",
-    recommendedTrafficSource: "warm_social_direct",
-    manualNotes:
-      "Known direct social revshare winner. Do not automatically rank for FreeOnlyFanz SEO without testing.",
-  },
 };
 
 const DEFAULT_MANUAL_CURATION = {
-  forceFeatureNewInventory: [
-    "natatsgirl",
-    "hadidavey",
-    "pollyreed",
-    "chloefdavis",
-    "lipswithsmileonthemm",
-  ],
+  forceFeatureNewInventory: [],
   forceHomepageTest: [],
   forceExclude: [],
-  notes: {
-    natatsgirl: "New offer user wants tested near top.",
-    hadidavey: "New offer user wants tested near top.",
-    pollyreed: "New offer user wants tested near top.",
-    chloefdavis: "New offer user wants tested near top.",
-    lipswithsmileonthemm: "New offer user wants tested near top.",
-  },
+  notes: {},
 };
 
 const CSV_COLUMNS = [
@@ -1396,19 +1377,64 @@ async function readCreators() {
   }
 }
 
-async function readManualCuration() {
+function getImportedUsernameSet(importedCreators) {
+  return new Set(
+    importedCreators
+      .map((creator) => normalizeUsername(creator.username || creator.slug || creator.onlyfansUrl))
+      .filter(Boolean)
+  );
+}
+
+function pruneManualCurationToImport(raw, importedCreators) {
+  const data = raw && typeof raw === "object" ? raw : DEFAULT_MANUAL_CURATION;
+  const importedUsernames = getImportedUsernameSet(importedCreators);
+  const keepUsername = (username) => importedUsernames.has(normalizeUsername(username));
+
+  const forceFeatureNewInventory = (data.forceFeatureNewInventory || []).filter(keepUsername);
+  const forceHomepageTest = (data.forceHomepageTest || []).filter(keepUsername);
+  const forceExclude = (data.forceExclude || []).filter(keepUsername);
+  const trafficWeights = Object.fromEntries(
+    Object.entries(data.trafficWeights || {}).filter(([username]) => keepUsername(username))
+  );
+  const notes = Object.fromEntries(
+    Object.entries(data.notes || {}).filter(([username]) => keepUsername(username))
+  );
+
+  return {
+    forceFeatureNewInventory,
+    forceHomepageTest,
+    forceExclude,
+    trafficWeights,
+    notes,
+  };
+}
+
+async function readManualCuration(importedCreators = []) {
+  let raw = DEFAULT_MANUAL_CURATION;
+
   try {
-    const raw = await fs.readFile(MANUAL_CURATION_PATH, "utf8");
-    return normalizeManualCuration(JSON.parse(raw));
+    raw = JSON.parse(await fs.readFile(MANUAL_CURATION_PATH, "utf8"));
   } catch (error) {
     if (error.code !== "ENOENT") {
       throw error;
     }
-
-    await fs.mkdir(path.dirname(MANUAL_CURATION_PATH), { recursive: true });
-    await fs.writeFile(MANUAL_CURATION_PATH, `${JSON.stringify(DEFAULT_MANUAL_CURATION, null, 2)}\n`, "utf8");
-    return normalizeManualCuration(DEFAULT_MANUAL_CURATION);
   }
+
+  const pruned = pruneManualCurationToImport(raw, importedCreators);
+  const removedFeatured = (raw.forceFeatureNewInventory || []).filter(
+    (username) => !pruned.forceFeatureNewInventory.includes(username)
+  );
+
+  if (JSON.stringify(pruned) !== JSON.stringify(raw)) {
+    await fs.mkdir(path.dirname(MANUAL_CURATION_PATH), { recursive: true });
+    await fs.writeFile(MANUAL_CURATION_PATH, `${JSON.stringify(pruned, null, 2)}\n`, "utf8");
+  }
+
+  if (removedFeatured.length > 0) {
+    console.log(`Removed featured entries not in API import: ${removedFeatured.join(", ")}`);
+  }
+
+  return normalizeManualCuration(pruned);
 }
 
 function normalizeLoadedTransactions(value) {
@@ -1462,7 +1488,7 @@ async function writeReports(creators, earningsStats) {
 async function main() {
   const { getPublicEligibilityDetails } = await import("../src/lib/creators.mjs");
   const importedCreators = await readCreators();
-  const manualCuration = await readManualCuration();
+  const manualCuration = await readManualCuration(importedCreators);
   const transactionsData = await readTransactionsIfExists();
   const earnings = attachTransactionEarnings(importedCreators, transactionsData);
   const creators = earnings.creators.map(applyManualOverrides).map((creator) => applyManualCurationFields(creator, manualCuration));

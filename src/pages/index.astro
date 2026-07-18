@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import HomeHero from "../components/home/HomeHero.astro";
 import HomeSection from "../components/home/HomeSection.astro";
 import { absoluteUrl } from "../lib/site.mjs";
+import { metaDescriptions } from "../lib/site-copy.mjs";
 import { getHomepageSections } from "../lib/creators.mjs";
 
 const sections = getHomepageSections();
@@ -115,8 +116,8 @@ const itemListSchema = {
 ---
 
 <BaseLayout
-  title="FreeOnlyFanz - Curated Free Creator Directory"
-  description="Browse curated free and free-trial creator picks, new profiles, featured shelves, and more free browsing."
+  title="Free OnlyFans Creators & Free Trials | FreeOnlyFanz"
+  description={metaDescriptions.home}
   canonicalPath="/"
 >
   <HomeHero creators={heroCreators} />
@@ -133,6 +134,43 @@ const itemListSchema = {
   )}
   {moreFreeSection && <HomeSection {...moreFreeSection} />}
 
+  <section class="section home-guides-section" aria-labelledby="home-guides-title">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-copy">
+          <h2 id="home-guides-title">Creator Guides</h2>
+          <p class="section-kicker">Niche free and free-trial lists for search and browsing.</p>
+        </div>
+        <a class="section-link" href="/guides/">All guides</a>
+      </div>
+      <div class="guide-related-grid">
+        <a class="guide-related-link" href="/guides/free-latina-onlyfans-creators/">
+          <span>Free Latina Creators</span>
+          <small>Latina profiles with free or free-trial access.</small>
+        </a>
+        <a class="guide-related-link" href="/guides/free-petite-onlyfans-creators/">
+          <span>Free Petite Creators</span>
+          <small>Petite creators currently listed as free or on trial.</small>
+        </a>
+        <a class="guide-related-link" href="/guides/free-asian-onlyfans-creators/">
+          <span>Free Asian Creators</span>
+          <small>Asian free and free-trial picks from the directory.</small>
+        </a>
+        <a class="guide-related-link" href="/guides/free-trial-onlyfans-accounts-2026/">
+          <span>Free Trial Accounts 2026</span>
+          <small>Active free-trial offers worth opening first.</small>
+        </a>
+        <a class="guide-related-link" href="/best-free-onlyfans-creators/">
+          <span>Best Free Picks</span>
+          <small>Our top free and free-trial starting list.</small>
+        </a>
+        <a class="guide-related-link" href="/free-onlyfans/">
+          <span>Free Creator Pages</span>
+          <small>Browse free profiles without junk lists.</small>
+        </a>
+      </div>
+    </div>
+  </section>
   <script is:inline>
     (function () {
       function shuffle(items) {

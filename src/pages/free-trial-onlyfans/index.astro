@@ -1,68 +1,66 @@
 ---
 import GuideLanding from "../../components/GuideLanding.astro";
 import { getFreeTrialGuideCreators } from "../../lib/guide-pages.mjs";
+import { guideFaqs, guideKickers } from "../../lib/guide-public-copy.mjs";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 const creators = getFreeTrialGuideCreators(12);
 const relatedLinks = [
+  {
+    href: "/guides/free-trial-onlyfans-accounts-2026/",
+    label: "Free Trial Accounts 2026",
+    description: "Monthly free-trial guide with current offers.",
+  },
   {
     href: "/category/free-trial/",
     label: "Free Trial Category",
     description: "Browse the full free-trial shelf.",
   },
   {
-    href: "/category/free/",
-    label: "Free Profiles",
-    description: "Compare free and free-trial picks.",
+    href: "/best-free-onlyfans-creators/",
+    label: "Best Free Picks",
+    description: "Top free and free-trial starting list.",
   },
   {
     href: "/creators/",
     label: "All Creators",
-    description: "Search the public creator list.",
-  },
-  {
-    href: "/categories/",
-    label: "Categories",
-    description: "Compare every public category.",
+    description: "Search the full directory.",
   },
 ];
 const faqs = [
   {
     question: "What is a free-trial creator page?",
-    answer:
-      "A free-trial creator page gives temporary free access or a free-to-follow path before optional paid features may appear on the external page.",
+    answer: guideFaqs.freeTrialPage,
   },
   {
     question: "Is a free trial the same as a permanently free page?",
-    answer:
-      "Not always. A trial can expire, renew, or change outside FreeOnlyFanz, so read the external page carefully before continuing.",
+    answer: guideFaqs.freeVsTrial,
   },
   {
     question: "Are all links completely free?",
-    answer:
-      "No. We prioritize free-trial access, but creator pages may still include paid content, tips, paid messages, or later subscription terms.",
+    answer: guideFaqs.completelyFree,
   },
   {
     question: "Why do some creators appear in more than one category?",
-    answer:
-      "Some creators are both free-trial picks and featured or new picks, so category overlap is normal.",
+    answer: guideFaqs.categoryOverlap,
   },
 ];
 ---
 
 <GuideLanding
-  title="Free Trial Creator Pages | FreeOnlyFanz"
-  description="Find free-trial creator pages and free-to-follow profiles from the current FreeOnlyFanz list."
+  title="Free Trial OnlyFans Accounts | FreeOnlyFanz"
+  description={metaDescriptions.freeTrial}
   canonicalPath="/free-trial-onlyfans/"
-  h1="Free Trial Creator Picks"
-  intro="Free-trial creator pages let you preview a creator before deciding whether the external page is worth more time."
-  explanationTitle="How Free-Trial Creator Pages Work"
+  h1="Free Trial OnlyFans Accounts Worth Opening"
+  intro="Free-trial OnlyFans pages let you preview a creator before deciding whether their full page is worth your time."
+  explanationTitle="How Free-Trial OnlyFans Pages Work"
   paragraphs={[
-    "A free-trial page usually gives temporary access or a promotional free path. The details can change on the external creator page, so FreeOnlyFanz keeps the page focused on discovery, not guarantees.",
-    "The creator cards below are selected from public eligible free-trial creators only. Open a card to view the internal profile first, then decide whether to continue.",
+    "Searching for free trial OnlyFans accounts usually means temporary or promotional access. The exact terms can change on the creator's own page, so read carefully before continuing.",
+    "The picks below are creators currently listed with a free-trial or promotional offer on FreeOnlyFanz. Open a profile here first, then visit their page if it looks like a fit.",
   ]}
   creators={creators}
   creatorSectionTitle="Free-Trial Picks"
-  creatorSectionKicker="Public eligible creators currently marked as free-trial friendly."
+  creatorSectionKicker={guideKickers.freeTrial}
   relatedLinks={relatedLinks}
   faqs={faqs}
 />

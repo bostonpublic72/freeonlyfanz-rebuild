@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 /* Replace with your real DMCA/designated contact if contact@freeonlyfanz.com is not monitored. */
 const DMCA_EMAIL = "contact@freeonlyfanz.com";
@@ -7,7 +8,7 @@ const DMCA_EMAIL = "contact@freeonlyfanz.com";
 
 <BaseLayout
   title="DMCA & Content Removal | FreeOnlyFanz"
-  description="Request removal of material on FreeOnlyFanz. We respond to good-faith copyright and personal-image reports."
+  description={metaDescriptions.dmca}
   canonicalPath="/dmca/"
 >
   <article class="info-page container">

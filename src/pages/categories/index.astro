@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCategoryDefinitions, loadCreators } from "../../lib/creators.mjs";
+import { metaDescriptions } from "../../lib/site-copy.mjs";
 
 const allCreators = loadCreators();
 const categoryCards = getCategoryDefinitions().map((category) => ({
@@ -12,14 +13,14 @@ const categoryCards = getCategoryDefinitions().map((category) => ({
 
 <BaseLayout
   title="Categories | FreeOnlyFanz"
-  description="Browse FreeOnlyFanz categories: free profiles, free trials, new picks, and featured creator pages. Shelves can overlap."
+  description={metaDescriptions.categories}
   canonicalPath="/categories/"
 >
   <section class="container category-intro categories-hub-intro">
     <p class="eyebrow">Categories</p>
     <h1>Find your lane</h1>
     <p class="categories-hub-lead">
-      Pick a shelf to browse. Some creators may appear in more than one category—that is normal here.
+      Pick a category to browse. Creators can appear in more than one shelf — that is normal.
     </p>
   </section>
 

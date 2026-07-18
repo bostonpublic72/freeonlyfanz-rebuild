@@ -1,5 +1,5 @@
 ---
-import { getCreatorBadges, getImageUrl } from "../lib/creators.mjs";
+import { getCreatorBadges, getImageUrl, getTqCardCtaText } from "../lib/creators.mjs";
 
 const { creator, priority = "secondary", hidden = false } = Astro.props;
 const imageUrl = getImageUrl(creator);
@@ -8,6 +8,7 @@ const blockedTqTagPattern = /\b(anal|ass|boobs?|cock|cum|dick|fetish|nudes?|puss
 const displayTags = (creator.tags || []).filter((tag) => !blockedTqTagPattern.test(String(tag))).slice(0, 2);
 const tagLine = displayTags.length > 0 ? displayTags.join(" | ") : "Free Pick";
 const outboundUrl = creator.tqTrackingUrl || creator.trackingUrl;
+const ctaText = getTqCardCtaText(creator);
 ---
 
 <article class="creator-card tq-card" data-creator-slug={creator.slug} hidden={hidden}>
@@ -50,7 +51,7 @@ const outboundUrl = creator.tqTrackingUrl || creator.trackingUrl;
       </div>
     </div>
     <div class="creator-card-body">
-      <span class="button secondary">Open Free Page</span>
+      <span class="button secondary tq-card-cta">{ctaText}</span>
     </div>
   </a>
 </article>
