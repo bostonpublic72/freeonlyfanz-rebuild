@@ -10,6 +10,7 @@ import {
   getProfileCompanions,
   loadCreators,
 } from "../../lib/creators.mjs";
+import { absoluteUrl } from "../../lib/site.mjs";
 
 export function getStaticPaths() {
   return loadCreators().map((creator) => ({
@@ -28,6 +29,23 @@ const isTrial = creator.isFreeTrial || creator.hasActiveFreePromo;
 const title = `${creator.displayName} (@${creator.username}) — ${isTrial ? "Free Trial" : "Free"} on FreeOnlyFanz`;
 const description = displayBio.text || `Open ${creator.displayName}'s current ${isTrial ? "free-trial" : "free"} profile on FreeOnlyFanz.`;
 const ctaText = getOutboundCtaText(creator);
+
+const profileImage = imageUrl
+  ? (/^https?:\/\//.test(imageUrl) ? imageUrl : absoluteUrl(imageUrl))
+  : "";
+const onlyfansProfileUrl = creator.onlyfansUrl
+  ? (/^https?:\/\//.test(creator.onlyfansUrl)
+      ? creator.onlyfansUrl
+      : `https://onlyfans.com/${creator.onlyfansUrl}`)
+  : "";
+const personSchema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: creator.displayName,
+  url: absoluteUrl(`/creator/${creator.slug}/`),
+  ...(profileImage ? { image: profileImage } : {}),
+  ...(onlyfansProfileUrl ? { sameAs: [onlyfansProfileUrl] } : {}),
+};
 
 const stats = [
   ["Posts", creator.postsCount],
@@ -121,4 +139,6 @@ const stats = [
       </div>
     </section>
   )}
+
+  <script type="application/ld+json" set:html={JSON.stringify(personSchema)} />
 </BaseLayout>
